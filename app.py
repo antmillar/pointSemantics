@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for
 import pickle
 import os
 from fastai.vision import *
@@ -18,6 +18,21 @@ output_path = cwd + '/static/img/output'
 @app.route('/')
 def hello():
     return render_template('index.html')
+    # return "Hello World!"
+
+@app.route('/three')
+def three():
+    return render_template('three.html')
+    # return "Hello World!"
+
+@app.route('/bloops')
+def bloops():
+    return render_template('bloops.html')
+    # return "Hello World!"
+
+@app.route('/chaos')
+def chaos():
+    return render_template('chaos.html')
     # return "Hello World!"
 
 @app.route('/paper')
