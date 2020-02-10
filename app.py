@@ -76,7 +76,6 @@ def paper():
     labels = json.dumps(list_of_labels)
 
     return render_template('paper.html', labels = labels)
-    # return "Hello World!"
 
 @app.route('/segmentation', methods=["GET", "POST"])
 def segmentation():
@@ -129,11 +128,6 @@ def segmentation():
         return render_template('segmentation.html', upload = upload, output = output, overlay = overlay)
 
     return render_template('segmentation.html')
-
-@app.route('/runModel')
-def runModel():
-    # return render_template('index.html')
-    return "Hello World!"
 
 
 if __name__ == '__main__':
