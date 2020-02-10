@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container text-center">
+    <img src = "static/img/output/neural.png"  style="height: 512px; width: 512px;">
+    <figcaption class="figure-caption">Neural Network Visualisation</figcaption>
+    <br>
+
+
+    <form action="/CPPN" method = "POST">
+
+    <div class="d-flex justify-content-center">
+    <div class="input-group mb-3 w-25">
+        <div class="input-group-prepend">
+          <label class="input-group-text" for="inputDims">Image Resolution</label>
+        </div>
+        <select class="custom-select" id="inputDims" name = "inputDims">
+          {% for dim in dimList %}
+                {% if inputDims == dim %}
+                    <option value= {{dim}}  selected>{{dim}}</option>
+                {% endif %} 
+          {% endfor %}
+<!--           
+          <option value="128" {% if inputDims == 128 %} selected {% endif %} >128</option>
+          <option  value="256" {% if inputDims == 256 %} selected {% endif %} >256</option>
+          <option value="512" {% if inputDims == 512 %} selected {% endif %} >512</option> -->
+        </select>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-center">
+      <div class="input-group mb-3  w-25">
+        <div class="input-group-prepend">
+          <label class="input-group-text" for="inputLayers">Hidden Layers</label>
+        </div>
+        <select class="custom-select" id="inputLayers"  name = "inputLayers">
+          <option value="4" {% if inputLayers == 4 %} selected {% endif %} >4</option>
+          <option value="8" {% if inputLayers ==8 %} selected {% endif %} >8</option>
+          <option value="16" {% if inputLayers ==16 %} selected {% endif %} >16</option>
+        </select>
+      </div>
+    </div>
+
+      <div class="d-flex justify-content-center">
+      <div class="input-group mb-3  w-25">
+        <div class="input-group-prepend">
+          <label class="input-group-text" for="inputNeurons">Hidden Neurons</label>
+        </div>
+        <select class="custom-select" id="inputNeurons" name = "inputNeurons">
+          <option value="4" {% if inputNeurons == 4 %} selected {% endif %} >4</option>
+          <option value="8" {% if inputNeurons == 8 %} selected {% endif %} >8</option>
+          <option value="12" {% if inputNeurons == 12 %} selected {% endif %} >12</option>
+        </select>
+      </div>
+    </div>
+
+
+      <div class="d-flex justify-content-center">.
+ 
+        <button type="submit"  method = "GET" class="btn btn-primary">Generate</button>
+    </form>
+    </div>
+
+
+
+
+
+</div>
+{% endblock %}

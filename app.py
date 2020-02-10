@@ -18,22 +18,40 @@ output_path = cwd + '/static/img/output'
 @app.route('/')
 def hello():
     return render_template('index.html')
-    # return "Hello World!"
 
 @app.route('/three')
 def three():
     return render_template('three.html')
-    # return "Hello World!"
+
+@app.route('/CPPN' , methods=["GET", "POST"])
+def cppn():
+
+    #run the NN
+    if request.method == "POST":
+
+        inputDims = int(request.form.get('inputDims'))
+        inputLayers = int(request.form.get('inputLayers'))
+        inputNeurons = int(request.form.get('inputNeurons'))
+
+        import python_modules.CPPN as CPPN
+
+        model = CPPN.CPPN(inputLayers, inputNeurons)
+        model.apply(CPPN.init_weights)
+        im = CPPN.createImage(model, inputDims)
+        plt.imsave(output_path + '/neural.png', im)
+        print(inputDims)
+
+        return render_template('cppn.html', dimList = ['128', '256', '512', '1024'],inputDims = inputDims, inputLayers = inputLayers, inputNeurons = inputNeurons)
+
+    return render_template('cppn.html', dimList = [128, 256, 512, 1024], inputDims = 128, inputLayers = 4, inputNeurons = 4)
 
 @app.route('/bloops')
 def bloops():
     return render_template('bloops.html')
-    # return "Hello World!"
 
 @app.route('/chaos')
 def chaos():
     return render_template('chaos.html')
-    # return "Hello World!"
 
 @app.route('/paper')
 def paper():

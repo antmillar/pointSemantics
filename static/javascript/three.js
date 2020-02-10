@@ -33,10 +33,7 @@ for(var i = 0; i < numpts; i++)
     colors[3*i] =  x / 5;
     colors[3*i + 1] =  y  / 5;
     colors[3*i + 2] = y / 5;
-
-
 }
-
 
 var geometry = new THREE.BufferGeometry().setFromPoints(points);
 
