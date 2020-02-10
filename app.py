@@ -26,6 +26,10 @@ def three():
 @app.route('/CPPN' , methods=["GET", "POST"])
 def cppn():
 
+    dimDict = {'128' : '1', '256' : '0', '512' : '0', '1024' : '0'}
+    layerDict = {'1' : '1', '4' : '0', '8' : '0', '12' : '0'}
+    neuronDict = {'4' : '1', '8' : '0', '12' : '0', '16' : '0'}
+
     #run the NN
     if request.method == "POST":
 
@@ -33,17 +37,23 @@ def cppn():
         inputLayers = int(request.form.get('inputLayers'))
         inputNeurons = int(request.form.get('inputNeurons'))
 
+        dimDict = dict.fromkeys(dimDict, 0)
+        dimDict[str(inputDims)] = '1'
+        layerDict = dict.fromkeys(layerDict, 0)
+        layerDict[str(inputLayers)] = '1'
+        neuronDict = dict.fromkeys(neuronDict, 0)
+        neuronDict[str(inputNeurons)] = '1'
+
         import python_modules.CPPN as CPPN
 
         model = CPPN.CPPN(inputLayers, inputNeurons)
         model.apply(CPPN.init_weights)
         im = CPPN.createImage(model, inputDims)
         plt.imsave(output_path + '/neural.png', im)
-        print(inputDims)
 
-        return render_template('cppn.html', dimList = ['128', '256', '512', '1024'],inputDims = inputDims, inputLayers = inputLayers, inputNeurons = inputNeurons)
+        return render_template('cppn.html', dimDict = dimDict, layerDict = layerDict, neuronDict = neuronDict, inputDims = inputDims, inputLayers = inputLayers, inputNeurons = inputNeurons)
 
-    return render_template('cppn.html', dimList = [128, 256, 512, 1024], inputDims = 128, inputLayers = 4, inputNeurons = 4)
+    return render_template('cppn.html', dimDict = dimDict, layerDict = layerDict, neuronDict = neuronDict)
 
 @app.route('/bloops')
 def bloops():

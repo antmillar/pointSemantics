@@ -15,15 +15,9 @@
           <label class="input-group-text" for="inputDims">Image Resolution</label>
         </div>
         <select class="custom-select" id="inputDims" name = "inputDims">
-          {% for dim in dimList %}
-                {% if inputDims == dim %}
-                    <option value= {{dim}}  selected>{{dim}}</option>
-                {% endif %} 
+          {% for key, value in dimDict.items() %}
+              <option value= {{key}} {% if value == '1' %} selected {% endif %} >{{key}}</option>
           {% endfor %}
-<!--           
-          <option value="128" {% if inputDims == 128 %} selected {% endif %} >128</option>
-          <option  value="256" {% if inputDims == 256 %} selected {% endif %} >256</option>
-          <option value="512" {% if inputDims == 512 %} selected {% endif %} >512</option> -->
         </select>
       </div>
     </div>
@@ -34,9 +28,9 @@
           <label class="input-group-text" for="inputLayers">Hidden Layers</label>
         </div>
         <select class="custom-select" id="inputLayers"  name = "inputLayers">
-          <option value="4" {% if inputLayers == 4 %} selected {% endif %} >4</option>
-          <option value="8" {% if inputLayers ==8 %} selected {% endif %} >8</option>
-          <option value="16" {% if inputLayers ==16 %} selected {% endif %} >16</option>
+          {% for key, value in layerDict.items() %}
+          <option value= {{key}} {% if value == '1' %} selected {% endif %} >{{key}}</option>
+          {% endfor %}
         </select>
       </div>
     </div>
@@ -47,9 +41,9 @@
           <label class="input-group-text" for="inputNeurons">Hidden Neurons</label>
         </div>
         <select class="custom-select" id="inputNeurons" name = "inputNeurons">
-          <option value="4" {% if inputNeurons == 4 %} selected {% endif %} >4</option>
-          <option value="8" {% if inputNeurons == 8 %} selected {% endif %} >8</option>
-          <option value="12" {% if inputNeurons == 12 %} selected {% endif %} >12</option>
+          {% for key, value in neuronDict.items() %}
+          <option value= {{key}} {% if value == '1' %} selected {% endif %} >{{key}}</option>
+         {% endfor %}
         </select>
       </div>
     </div>
