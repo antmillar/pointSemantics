@@ -161,6 +161,11 @@ function mutate(shape){
 
 function nextGeneration(){
 
+    for(var i=0; i < genomes.length; i++)
+    {
+        parents.push(genomes[Math.floor(Math.random() * 16 )]);
+    }
+    console.log("parents");
     console.log(parents);
 }
 
