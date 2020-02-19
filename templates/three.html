@@ -2,7 +2,14 @@
 {% extends "base.html" %}
 {% block content %}
 <body style="margin: 0;">
-<script type="text/javascript" src="static/javascript/three.js" ></script>
+<script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js'></script>
+<script type="module" src="static/javascript/three.js" ></script>
 
 </body>
+
+<canvas id="c"></canvas>
+<div id="dat">
+
+</div>
+  
 {% endblock %}
