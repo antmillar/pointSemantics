@@ -19,9 +19,9 @@ output_path = cwd + '/static/img/output'
 def hello():
     return render_template('index.html')
 
-@app.route('/three')
+@app.route('/modelViewer')
 def three():
-    return render_template('three.html')
+    return render_template('modelViewer.html')
 
 @app.route('/CPPN' , methods=["GET", "POST"])
 def cppn():
