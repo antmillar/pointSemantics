@@ -6,13 +6,10 @@ import Controller from './js/gui.js';
 var view = new View();
 var geos = new Geometries();
 
-const preload = ['norm.ply', 'SpatialMapping.obj']
-
-preload.forEach((item) => geos.loadGeometry(item));
-
 var controller = new Controller(view, geos);
 
+//preload the default geometries
+const preload = ['SpatialMappingPost.ply', 'SpatialMapping.obj']
+preload.forEach((item) => geos.loadGeometry(item));
+
 requestAnimationFrame(() => view.render());
-
-
-

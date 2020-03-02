@@ -20,7 +20,7 @@ export default class View
       const fov = 45;
       const aspect = 2;  // the canvas default
       const clipNear = 0.01;
-      const clipFar = 200;
+      const clipFar = 2000;
       this.camera = new THREE.PerspectiveCamera(fov, aspect, clipNear, clipFar);
       this.camera.position.set(0, 10, 20);
 
@@ -30,7 +30,7 @@ export default class View
       controls.update();
 
       //grid
-      const size = 100;
+      const size = 50;
       const divisions = 100;
       let helper = new THREE.GridHelper( size, divisions, 0xAAAAAA, 0xEEEEEE );
       this.scene.add( helper );

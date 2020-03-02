@@ -1,3 +1,4 @@
+//import loader helpers
 import {OBJLoader2} from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/loaders/OBJLoader2.js';
 import {PLYLoader} from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/loaders/PLYLoader.js';
 
@@ -7,13 +8,39 @@ export default class Geometries
   constructor(name, type)
   {
     this.name = name;
-    this.files = [];
+    this.files = {};
+    this.activeModel;
+    this.labelMap =   {
+
+    "[152, 223, 138]":		 "floor",
+    "[174, 199, 232]":		 "wall",
+    "[31, 119, 180]" :		 "cabinet",
+    "[255, 187, 120]":		 "bed",
+    "[188, 189, 34]": 		 "chair",
+    "[140, 86, 75]":  		 "sofa",
+    "[255, 152, 150]":		 "table",
+    "[214, 39, 40]":  		 "door",
+    "[197, 176, 213]":		 "window",
+    "[148, 103, 189]":		 "bookshelf",
+    "[196, 156, 148]":		 "picture",
+    "[23, 190, 207]":		 "counter",
+    "[247, 182, 210]"	:	 "desk",
+    "[219, 219, 141]":		 "curtain",
+    "[255, 127, 14]":		 "refrigerator",
+    "[227, 119, 194]":		 "bathtub",
+    "[158, 218, 229]":		 "shower curtain",
+    "[44, 160, 44]":  		 "toilet",
+    "[112, 128, 144]":		 "sink",
+    "[82, 84, 163]":      "otherfurn"
+
+    }
+    this.eventLoaded = new Event('loaded');
+
   }
 
-
+  //load geometry from a path
   loadGeometry(path)
   {
-
     let extn = path.substr(path.lastIndexOf('.') + 1);
 
     if(path in this.files)
@@ -23,114 +50,145 @@ export default class Geometries
     else if(extn.toUpperCase() === "PLY")
     {
       this.loadPLY(path);
-      console.log(`Loaded : ${path}`)
     }
-    else if (extn.toUpperCase() === "OBJ")
+    else if (extn.toUpperCase() === "OBJ" )
     {
       this.loadOBJ(path);
-      console.log(`Loaded : ${path}`)
     }
     else
     {
       console.error("Invalid Path Extension");
     }
 
-   console.log(this.files);
   }
 
-
+  //load PLY file from path
   loadPLY(path){
+
     const plyLoader = new PLYLoader();
-    console.log('/static/models/' + path);
     
     plyLoader.load('/static/models/' + path, (geometry) => {
-    
-    
-      geometry.computeVertexNormals();
-    
-      let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.1, vertexColors: THREE.VertexColors })
-      let mesh = new THREE.Points( geometry, material );
+    console.log('Loading : /static/models/' + path);
+    geometry.computeVertexNormals();
+  
+    let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.1, vertexColors: THREE.VertexColors })
+    let pcd = new THREE.Points( geometry, material );
 
+    let positions = geometry.getAttribute("position");
+    let colors =  geometry.getAttribute('color');
+    let colorsScaled = colors.array.map(x => x * 255.0);
 
-    var positions = geometry.getAttribute("position");
-    var count = Math.floor(positions.count / 3);
-    console.log(count);
+    let state = path.substr(path.lastIndexOf('.') - 4, 4);
 
-    var xsum = 0;
-    var ysum = 0;
-    var zsum = 0;
+    console.log(state);
 
-    for (let i = 0; i < count - 1; i++ ) {
+    //temporary way of only doing this for images that have labels
+    if(state === "Post"){
 
-        xsum += positions.array[i];
-        ysum += positions.array[i + 1];
-        zsum += positions.array[i + 2];
+      //split coords into triplets
+      var coords = colorsScaled.reduce(function(result, _, index, array) {
+
+        if(index % 3 === 0)
+        {
+          result.push(array.slice(index, index + 3));
+        }
+        return result
+
+      }, []);
+
+      let set = new Set(coords.map(JSON.stringify));
+      let unique = Array.from(set).map(JSON.parse);
+
+      pcd.labels = unique;
+    }
+    else
+    {
+      pcd.labels = [];
     }
 
-console.log(ysum);
-    var xmean = xsum / count;
-    var ymean = ysum / count;    
-    var zmean = zsum / count;
-
-    console.log(xmean, ymean, zmean);
-
-        
-      mesh.position.x = xmean;
-      mesh.position.y = ymean;
-      mesh.position.z = zmean;
-
-      console.log(mesh);
-      mesh.name = "INACTIVE";
-
-      //if from scannet
-      if(path.slice(0,5) === "scene")
-      {
-        mesh.rotation.x = -Math.PI / 2;
-      }
-      mesh.scale.set(1.5, 1.5, 1.5);
-      this.files[path] = mesh;
-      
-      // scene.add( mesh );
-      
+    //if from scannet need to rotate
+    if(path.slice(0,5) === "scene")
+    {
+      pcd.rotation.x = -Math.PI / 2;
+    }
     
-      });
+    function average(nums){return nums.reduce((a, b) => (a + b)) / nums.length}
+
+    let xMean = average(positions.array.filter((_,i) => i % 3 === 0));
+    let yMean = average(positions.array.filter((_,i) => (i+1) % 3 === 0));
+    let zMin = Math.min(...positions.array.filter((_,i) => (i+2) % 3 === 0));
+
+    //console.log(xMean,yMean,zMean);
+      
+    pcd.position.x = -xMean;
+    pcd.position.y = -zMin;
+    pcd.position.z = -yMean;
+
+    pcd.scale.set(1, 1, 1);
+
+    //add to loaded files
+    this.files[path] = pcd;
+    
+    //dispatch event to say file loaded
+    console.log(`Loaded : ${path}`);
+    loadButton.dispatchEvent(this.eventLoaded);
+    });
     }
 
+    //load OBJ file from path
     loadOBJ(path){
-      //OBJ Loader
       {
         const objLoader = new OBJLoader2();
-        console.log('/static/models/' + path);
+        console.log('Loading : /static/models/' + path);
       
         //need to update this to properly parse the file
         objLoader.load('/static/models/' + path, (geometry) => {
       
-          
-          let object = geometry.children[0];
+          //hacky check for whether geometry in children
+
+          let object;
+          if(!(object = geometry.children[0]))
+          {
+
+            object = geometry;
+          }
+
           var count = object.geometry.attributes.position.count;
           
           object.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
     
-    
           var color = new THREE.Color();
           var colors1 = object.geometry.attributes.color;
-        //   console.log(count);
-      
-          var cols = [0.0, 0.25, 0.5, 0.75];
+
       
             for ( var i = 0; i < count; i ++ ) {
               var choice = Math.floor(Math.random() * 4);
-              // color.setRGB(  ( geometry.children[0].geometry.attributes.position.getX( i ) / 10 + 1 ) / 2, 0.2 ,1.0 - ( geometry.children[0].geometry.attributes.position.getZ( i ) / 10 + 1 ) / 2 );
-              color.setRGB(cols[choice], cols[choice], cols[choice]);
+              color.setRGB(0.75, 0.75, 0.75);
               colors1.setXYZ( i, color.r, color.g, color.b );
             }
-            object.geometry.attributes.color.needsUpdate = true;
 
-            object.name = "INACTIVE";
-        // model.scale.set(2, 2, 2);
-      
-        const INITIAL_MTL = new THREE.MeshPhongMaterial( { shininess: 10 , vertexColors: THREE.VertexColors } ); //color: 0xf1f1f1, 
+            let scale = 1;
+            if(path.slice(0,5) == "chair"){
+            scale = 0.005
+            object.rotation.x = -Math.PI / 2;
+            }
+            object.scale.set(scale, scale, scale);
 
+            var positions = object.geometry.getAttribute("position");
+
+            function average(nums){return nums.reduce((a, b) => (a + b)) / nums.length}
+        
+            let xMean = average(positions.array.filter((_,i) => i % 3 === 0));
+            let yMean = average(positions.array.filter((_,i) => (i+1) % 3 === 0));
+            let zMean = Math.min(...positions.array.filter((_,i) => (i+2) % 3 === 0));
+        
+            // console.log(xMean,yMean,zMean);
+                
+            object.position.x = -xMean * scale;
+            object.position.y = -zMean * scale;
+            object.position.z = -yMean * scale;
+    
+        const mat = new THREE.MeshPhongMaterial( { shininess: 10 , vertexColors: THREE.VertexColors } ); //color: 0xf1f1f1, 
 
         function initColor(parent, mtl) {
             parent.traverse((o) => {
@@ -141,14 +199,15 @@ console.log(ysum);
           }
 
         //assign vertex colors material to model
-        initColor(object, INITIAL_MTL);
+        initColor(object, mat);
+
+        object.labels = {};
       
-        console.log(object);
-        
-      
-        // scene.add(model);
         this.files[path] = object;
-        
+      
+        //dispatch event to say file loaded
+        console.log(`Loaded : ${path}`);
+        loadButton.dispatchEvent(this.eventLoaded);
         });
       }
       }
