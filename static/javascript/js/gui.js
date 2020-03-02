@@ -25,28 +25,6 @@ export default class Controller
         modelcolor: 0.00
       };
 
-  //   var obj = {add : function(){
-  //     var dropdown;
-  //     dropdown.name('File Name');
-  //     dropdown.onChange(function(value) {
-      
-  //       var selectedObject;
-  //       if(selectedObject = that.view.scene.getObjectByName("ACTIVE"))
-  //       {
-  //         that.view.scene.remove( selectedObject );
-  //         selectedObject.name = "INACTIVE";
-  //       }
-       
-  //       that.view.scene.add(that.geos.files[value]);
-  //       console.log(that.geos.files[value].labels);
-
-  //       // folder3.__controllers = [];
-  //       // console.log(folder3);
-  //       that.geos.files[value].name = "ACTIVE";
-  // ``  });
-      
-  //     }};
-      // console.log(that.geos.files);
 
       //set up the GUI
       this.gui.add(loader, 'loadFile').name("Load OBJ File");
@@ -60,16 +38,9 @@ export default class Controller
       var dropdown = folder2.add({fileName : ""}, 'fileName', Object.keys(that.geos.files));
 
       //create list of labels available
-      var folder3 = folder.addFolder("Filter Labels");
+      var folder3;
       var toggle = {};
 
-      // for(const key of Object.keys(this.geos.labelMap)){
-      //   toggle[this.geos.labelMap[key]] = true;
-      // }
-
-      // for(const key of Object.keys(toggle)){
-      //   folder3.add(toggle, key);
-      // }
 
       folder.open();
       folder2.open();
@@ -85,7 +56,6 @@ export default class Controller
       this.loadButton.addEventListener('loaded', function (e) {
 
         dropdown = dropdown.options(Object.keys(that.geos.files))
-        console.log(dropdown);
         dropdown.name('File Name');
 
         dropdown.onChange(function(value) {
@@ -118,10 +88,12 @@ export default class Controller
           }
 
           for(const key of Object.keys(toggle)){
-            folder3.add(toggle, key);
+            folder3.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
           }
 
           that.view.scene.add(that.geos.activeModel);
+
+          console.log(that.geos.activeModel)
       });
       
       }, false);
@@ -131,6 +103,7 @@ export default class Controller
   changeColor(value)
   {
     console.log("Changing Color of Active Model");
+
     if(this.geos.activeModel){
 
       var colors = this.geos.activeModel.geometry.attributes.color;
@@ -140,6 +113,44 @@ export default class Controller
       
         var color = new THREE.Color(value);
         colors.setXYZ( i, color.r, color.g, color.b);
+      }
+      colors.needsUpdate = true;
+    }
+  }
+
+  changeColorLabelled(bool, label)
+  {
+
+    if(this.geos.activeModel){
+
+      var colors = this.geos.activeModel.geometry.attributes.color;
+      const key = Object.keys(this.geos.labelMap).find(key => this.geos.labelMap[key] === label)
+      const vals = key.slice(1, key.length-1).split(", ");
+      var cols = vals.map(Number);
+      var cols = cols.map(x => x / 255.0);
+
+      var offColor = new THREE.Color('red');
+      var onColor = new THREE.Color().fromArray(cols);
+      console.log(onColor);
+
+      //need to save the toggle status
+
+
+      //loop over the color attributes
+      for ( var i = 0; i < colors.count; i ++ ) {
+
+        
+        if(this.geos.activeModel.labelledPoints[i] === label)
+        {
+          if(bool){
+
+          colors.setXYZ(i, offColor.r, offColor.g, offColor.b);
+          }
+          else
+          {
+          colors.setXYZ(i, onColor.r, onColor.g, onColor.b);
+          }
+        }
       }
       colors.needsUpdate = true;
     }

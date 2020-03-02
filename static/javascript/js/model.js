@@ -96,10 +96,13 @@ export default class Geometries
 
       }, []);
 
+      pcd.labelledPoints = coords.map(x=> this.labelMap[objToString(x)]);
+
       let set = new Set(coords.map(JSON.stringify));
       let unique = Array.from(set).map(JSON.parse);
 
       pcd.labels = unique;
+
     }
     else
     {
@@ -213,4 +216,13 @@ export default class Geometries
       }
 }
 
- 
+function objToString(obj)
+{
+  let arr = Object.values(obj);
+
+  var str = "[";
+  str += arr.join(", ");
+  str += "]";
+  
+  return str;
+}

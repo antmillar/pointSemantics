@@ -14,7 +14,7 @@ export default class View
 
       //scene
       this.scene = new THREE.Scene();
-      this.scene.background = new THREE.Color('white');
+      this.scene.background = new THREE.Color("white");
 
       //camera
       const fov = 45;
