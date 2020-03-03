@@ -3,8 +3,32 @@
 {% block content %}
 <body style="margin: 0;">
 <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js'></script>
-<script type="module" src="static/javascript/modelViewer.js" ></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<script type = "x-shader/x-vertex" id = "vtxShader"> 
+attribute float visible;
+attribute vec3 color;
+varying vec3 shaderColor;
+
+void main()
+{
+    gl_PointSize = visible;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    shaderColor = color;
+}
+</script>
+
+<script type = "x-shader/x-fragment" id = "frgShader">
+varying vec3 shaderColor;
+
+void main(){
+    gl_FragColor = vec4(shaderColor, 1.0);
+}
+</script>
+
+<script type="module" src="static/javascript/modelViewer.js" ></script>
+
+
 
 </body>
 

@@ -70,13 +70,31 @@ export default class Geometries
     plyLoader.load('/static/models/' + path, (geometry) => {
     console.log('Loading : /static/models/' + path);
     geometry.computeVertexNormals();
-  
+
+    let visible = new Float32Array( geometry.attributes.position.count);
+    visible.fill(2.0);
+    geometry.setAttribute( 'visible', new THREE.BufferAttribute( visible, 1 ) );
+
     let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.1, vertexColors: THREE.VertexColors })
+
+
+    let shaderMaterial = new THREE.ShaderMaterial({
+
+      vertexShader : document.querySelector("#vtxShader").textContent,
+      fragmentShader : document.querySelector("#frgShader").textContent
+    })
+
+    material = shaderMaterial;
+
     let pcd = new THREE.Points( geometry, material );
 
     let positions = geometry.getAttribute("position");
     let colors =  geometry.getAttribute('color');
+
+
+
     let colorsScaled = colors.array.map(x => x * 255.0);
+
 
     let state = path.substr(path.lastIndexOf('.') - 4, 4);
 
@@ -127,7 +145,7 @@ export default class Geometries
     pcd.position.y = -zMin;
     pcd.position.z = -yMean;
 
-    pcd.scale.set(1, 1, 1);
+    pcd.scale.set(2, 2, 2);
 
     //add to loaded files
     this.files[path] = pcd;

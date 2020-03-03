@@ -84,7 +84,7 @@ export default class Controller
           for(var i = 0; i< activeLabelCount; i++){
 
             let key = objToString(that.geos.activeModel.labels[i])
-            toggle[that.geos.labelMap[key]] = false;
+            toggle[that.geos.labelMap[key]] = true;
           }
 
           for(const key of Object.keys(toggle)){
@@ -124,12 +124,17 @@ export default class Controller
     if(this.geos.activeModel){
 
       var colors = this.geos.activeModel.geometry.attributes.color;
+      var visible = this.geos.activeModel.geometry.attributes.visible;
+
+
+      colors.needsUpdate = true;
+      visible.needsUpdate = true;
+
       const key = Object.keys(this.geos.labelMap).find(key => this.geos.labelMap[key] === label)
       const vals = key.slice(1, key.length-1).split(", ");
       var cols = vals.map(Number);
       var cols = cols.map(x => x / 255.0);
 
-      var offColor = new THREE.Color('red');
       var onColor = new THREE.Color().fromArray(cols);
       console.log(onColor);
 
@@ -139,20 +144,17 @@ export default class Controller
       //loop over the color attributes
       for ( var i = 0; i < colors.count; i ++ ) {
 
-        
         if(this.geos.activeModel.labelledPoints[i] === label)
         {
           if(bool){
-
-          colors.setXYZ(i, offColor.r, offColor.g, offColor.b);
+            visible.setX(i, 2.0);
           }
           else
           {
-          colors.setXYZ(i, onColor.r, onColor.g, onColor.b);
+            visible.setX(i, 0.0);
           }
         }
       }
-      colors.needsUpdate = true;
     }
   }
   }
