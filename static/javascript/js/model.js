@@ -89,7 +89,7 @@ export default class Geometries
     let pcd = new THREE.Points( geometry, material );
 
     let positions = geometry.getAttribute("position");
-    let colors =  geometry.getAttribute('color');
+    let colors =  geometry.getAttribute("color");
 
 
 
@@ -127,11 +127,11 @@ export default class Geometries
       pcd.labels = [];
     }
 
-    //if from scannet need to rotate
-    if(path.slice(0,5) === "scene")
-    {
-      pcd.rotation.x = -Math.PI / 2;
-    }
+    // //if from scannet need to rotate
+    // if(path.slice(0,5) === "scene")
+    // {
+    //   pcd.rotation.x = -Math.PI / 2;
+    // }
     
     function average(nums){return nums.reduce((a, b) => (a + b)) / nums.length}
 
@@ -141,9 +141,9 @@ export default class Geometries
 
     //console.log(xMean,yMean,zMean);
       
-    pcd.position.x = -xMean;
+    // pcd.position.x = -xMean;
     pcd.position.y = -zMin;
-    pcd.position.z = -yMean;
+    // pcd.position.z = -yMean;
 
     pcd.scale.set(2, 2, 2);
 
