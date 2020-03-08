@@ -130,7 +130,7 @@ export default class Geometries
     // //if from scannet need to rotate
     // if(path.slice(0,5) === "scene")
     // {
-    //   pcd.rotation.x = -Math.PI / 2;
+    pcd.rotation.x = -Math.PI / 2;
     // }
     
     function average(nums){return nums.reduce((a, b) => (a + b)) / nums.length}
@@ -176,6 +176,7 @@ export default class Geometries
 
           var count = object.geometry.attributes.position.count;
           
+          if(path != "scene3colPost.obj"){
           object.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
     
           var color = new THREE.Color();
@@ -187,12 +188,13 @@ export default class Geometries
               color.setRGB(0.75, 0.75, 0.75);
               colors1.setXYZ( i, color.r, color.g, color.b );
             }
-
-            let scale = 1;
+          }
+            let scale = 2;
             if(path.slice(0,5) == "chair"){
             scale = 0.005
-            object.rotation.x = -Math.PI / 2;
+            // object.rotation.x = -Math.PI / 2;
             }
+            object.rotation.x = -Math.PI / 2;
             object.scale.set(scale, scale, scale);
 
             var positions = object.geometry.getAttribute("position");
