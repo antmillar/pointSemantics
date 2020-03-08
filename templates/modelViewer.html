@@ -1,4 +1,3 @@
-<!-- <script type="text/javascript" src="javascripts/paper.js"></script> -->
 {% extends "base.html" %}
 {% block content %}
 <body style="margin: 0;">
@@ -28,14 +27,14 @@ void main(){
 
 <script type="module" src="static/javascript/modelViewer.js" ></script>
 
-
-
 </body>
 
-<input id = "loadButton" type = "file" style = "visibility: hidden;">
-<canvas id="c"></canvas>
-<div id="dat">
+<input id = "btnLoad" type = "file" style = "visibility: hidden;">
 
-</div>
+<form action="" method="POST" id = "btnModel">
+    <input type="hidden" id = "fileName" name = "fileName">
+</form>
+
+<canvas id="c"></canvas>
   
 {% endblock %}

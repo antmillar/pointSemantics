@@ -6,6 +6,8 @@ import torch
 import matplotlib.pyplot as plt
 from PIL import Image
 import json
+import python_modules.processPLY as processPLY
+
 
 app = Flask(__name__ , static_url_path = '/static' )
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 ##prevent file caching
@@ -13,14 +15,29 @@ cwd = os.getcwd()
 path = cwd + '/models'
 upload_path = cwd + '/static/img/uploads'
 output_path = cwd + '/static/img/output'
+input_path = cwd + '/static/models/'
+
 # #Loading the saved model using fastai's load_learner method
 
 @app.route('/')
-def hello():
+def index():
     return render_template('index.html')
 
-@app.route('/modelViewer')
-def three():
+@app.route('/modelViewer' , methods=["GET", "POST"])
+def modelViewer():
+
+    if request.method == "POST":
+
+        torch.cuda.empty_cache()
+        fileName = request.form.get("fileName")
+        print(input_path + fileName)
+        vertexData = processPLY.read_ply_xyzrgb(input_path + "/toilets4k.ply")
+        print(vertexData.shape)
+        data = processPLY.add_blank_cols(vertexData)
+        print(data.shape)
+        processPLY.save(data)
+        processPLY.evaluate()
+
     return render_template('modelViewer.html')
 
 @app.route('/CPPN' , methods=["GET", "POST"])
@@ -55,13 +72,7 @@ def cppn():
 
     return render_template('cppn.html', dimDict = dimDict, layerDict = layerDict, neuronDict = neuronDict)
 
-@app.route('/bloops')
-def bloops():
-    return render_template('bloops.html')
 
-@app.route('/chaos')
-def chaos():
-    return render_template('chaos.html')
 
 @app.route('/paper')
 def paper():

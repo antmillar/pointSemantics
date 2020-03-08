@@ -87,6 +87,7 @@ export default class Geometries
     material = shaderMaterial;
 
     let pcd = new THREE.Points( geometry, material );
+    pcd.name = path;
 
     let positions = geometry.getAttribute("position");
     let colors =  geometry.getAttribute("color");
@@ -152,7 +153,7 @@ export default class Geometries
     
     //dispatch event to say file loaded
     console.log(`Loaded : ${path}`);
-    loadButton.dispatchEvent(this.eventLoaded);
+    btnLoad.dispatchEvent(this.eventLoaded);
     });
     }
 
@@ -168,12 +169,13 @@ export default class Geometries
           //hacky check for whether geometry in children
 
           let object;
+
           if(!(object = geometry.children[0]))
           {
 
             object = geometry;
           }
-
+          object.name = path;
           var count = object.geometry.attributes.position.count;
           
           if(path != "scene3colPost.obj"){
@@ -230,11 +232,28 @@ export default class Geometries
       
         //dispatch event to say file loaded
         console.log(`Loaded : ${path}`);
-        loadButton.dispatchEvent(this.eventLoaded);
+        btnLoad.dispatchEvent(this.eventLoaded);
         });
       }
       }
+
+      //running the model on PLY file
+      runModel()
+      {
+        console.error("not implemented yet")
+        console.log(this.activeModel)
+        //to implement here
+
+        //check if the input is PLY file
+        //convert the PLY file into a numpy array
+        //pass into the model
+        //save result to a new PLY file
+      }
+
+
 }
+
+
 
 function objToString(obj)
 {

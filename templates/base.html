@@ -5,28 +5,31 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.2/paper-full.min.js" integrity="sha256-xT9jNx8tzepeeLwMeN985td1KYlkEOZJ/ReF9XMLoMU=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js" integrity="sha256-gSh8eotzb/CVvCREGPUNgIWuDnTYnZvVOQnRrP1eDjI=" crossorigin="anonymous"></script>
     
-    <head>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="/">Experiments_</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-              <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-              <div class="navbar-nav">
-                <a class="nav-item nav-link" href="/segmentation">Segmentation</a>
-                <a class="nav-item nav-link" href="/CPPN">CPPN</a>
-                <a class="nav-item nav-link" href="/modelViewer">Model Viewer</a>
-                <a class="nav-item nav-link" href="/bloops">Bloops</a>
-                <a class="nav-item nav-link" href="/chaos">Logistic Map</a>
-                
-              </div>
-            </div>
-          </nav>
-    </head>
-
-    <div class = "spacer"></div>
-
     <body>
+
+      <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <a class="navbar-brand" href="/">PointSemantics</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link js-scroll-trigger" href="">About</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link js-scroll-trigger" href="">Projects</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link js-scroll-trigger" href="">Contact</a>
+              </li>
+            </ul>
+          </div> -->
+      </nav>
+
         {% block content %}{% endblock %}
+
     </body>
+
+
 </html>

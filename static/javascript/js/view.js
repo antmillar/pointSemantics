@@ -74,7 +74,6 @@ export default class View
       
       this.renderer.render(this.scene, this.camera);
   
-      // model.attributes.color.needsUpdate = true;
       requestAnimationFrame(() => this.render());
     }
 }

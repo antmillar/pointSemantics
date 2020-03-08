@@ -6,19 +6,26 @@ export default class Controller
     this.gui = new dat.GUI({width : '400px'});
     this.view = view;
     this.geos = geos;
-    this.loadButton = document.querySelector("#loadButton");
+    this.btnLoad = document.querySelector("#btnLoad");
+    this.btnModel = document.querySelector("#btnModel");
     this.initialise();
   }
 
   initialise()
   {
-   
     var that = this;
 
     //when load gui button is clicked, simulates a click of the hidden load button 
     const loader = {
-        loadFile: function() {document.querySelector('#loadButton').click();}
+        loadFile: function() {document.querySelector('#btnLoad').click();}
     };
+
+    const model = {
+      runModel: function() {
+        document.querySelector("#fileName").value = that.geos.activeModel.name;
+        document.querySelector('#btnModel').submit();
+      }
+   };
 
     //set default color for color picker
     const color =  {
@@ -34,8 +41,11 @@ export default class Controller
       folder.addColor(color, 'modelcolor').name('Model Color').onChange((value) => this.changeColor(value));
 
       //create model dropdown
-      var folder2 = folder.addFolder('Loaded Models');
+      var folder2 = folder.addFolder('Input PLY Models');
       var dropdown = folder2.add({fileName : ""}, 'fileName', Object.keys(that.geos.files));
+
+      //run Model button
+      this.gui.add(model, 'runModel').name("Run Model");
 
       //create list of labels available
       var folder3;
@@ -45,23 +55,20 @@ export default class Controller
       folder.open();
       folder2.open();
 
-      //on change of the hidden load button load a file
-      this.loadButton.addEventListener('change', function() {
-          
-        that.geos.loadGeometry(loadButton.files[0].name)
+      //on change of the hidden model button to the model
+      this.btnModel.addEventListener('click', () => that.geos.runModel());
 
-      });
+      //on change of the hidden load button load a file
+      this.btnLoad.addEventListener('change', () => that.geos.loadGeometry(btnLoad.files[0].name));
 
       //when file is loaded update the dropdown list
-      this.loadButton.addEventListener('loaded', function (e) {
+      this.btnLoad.addEventListener('loaded', function (e) {
 
         dropdown = dropdown.options(Object.keys(that.geos.files))
         dropdown.name('File Name');
 
         dropdown.onChange(function(value) {
-
-       
-        
+               
           //if active model present, remove it
           if(that.geos.activeModel)
           {
