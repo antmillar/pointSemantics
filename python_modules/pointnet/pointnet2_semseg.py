@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from python_modules.pointnet2_modules import PointnetFPModule, PointnetSAModule, PointnetSAModuleMSG
-import python_modules.pytorch_utils as pt_utils
+from python_modules.pointnet.pointnet2_modules import PointnetFPModule, PointnetSAModule, PointnetSAModuleMSG
+import python_modules.pointnet.pytorch_utils as pt_utils
 
 
 def get_model(num_classes, is_msg=True, input_channels=6, use_xyz=True, bn=True):

@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import python_modules.pointnet2_utils as pointnet2_utils
-import python_modules.pytorch_utils as pt_utils
+import python_modules.pointnet.pointnet2_utils as pointnet2_utils
+import python_modules.pointnet.pytorch_utils as pt_utils
 from typing import List
 
 

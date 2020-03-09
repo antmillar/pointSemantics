@@ -6,7 +6,7 @@ import torch
 import matplotlib.pyplot as plt
 from PIL import Image
 import json
-import python_modules.processPLY as processPLY
+import python_modules.eval as eval
 
 
 app = Flask(__name__ , static_url_path = '/static' )
@@ -31,12 +31,12 @@ def modelViewer():
         torch.cuda.empty_cache()
         fileName = request.form.get("fileName")
         print(input_path + fileName)
-        vertexData = processPLY.read_ply_xyzrgb(input_path + "/toilets4k.ply")
+        vertexData = eval.readPLY(input_path + "/toilets4kRGB.ply")
         print(vertexData.shape)
-        data = processPLY.add_blank_cols(vertexData)
+        data = eval.add_blank_cols(vertexData)
         print(data.shape)
-        processPLY.save(data)
-        processPLY.evaluate()
+        # eval.save(data)
+        eval.evaluate(fileName, data)
 
     return render_template('modelViewer.html')
 
