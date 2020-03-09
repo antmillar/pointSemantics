@@ -2,13 +2,14 @@
 import {OBJLoader2} from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/loaders/OBJLoader2.js';
 import {PLYLoader} from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/loaders/PLYLoader.js';
 
-export default class Geometries 
+export default class Model 
 {
 
   constructor(name, type)
   {
     this.name = name;
-    this.files = {};
+    this.filesInputs = {};
+    this.filesOutputs = {};
     this.activeModel;
     this.labelMap =   {
 
@@ -35,25 +36,39 @@ export default class Geometries
 
     }
     this.eventLoaded = new Event('loaded');
+    this.pathInput = "/static/models/inputs/";
+    this.pathOutput = "/static/models/outputs/";
+
+  }
+
+  loadInputs(files)
+  {
+    files.forEach((item) => this.loadGeometry(item, this.filesInputs, this.pathInput, this.pathInput));
+
+  }
+
+  loadOutputs(files)
+  {
+    files.forEach((item) => this.loadGeometry(item, this.filesOutputs, this.pathOutput, this.pathOutput));
 
   }
 
   //load geometry from a path
-  loadGeometry(path)
+  loadGeometry(fn, dest, root)
   {
-    let extn = path.substr(path.lastIndexOf('.') + 1);
+    let extn = fn.substr(fn.lastIndexOf('.') + 1);
 
-    if(path in this.files)
+    if(false)//fn in dest)
     {
         //pass;
     }
     else if(extn.toUpperCase() === "PLY")
     {
-      this.loadPLY(path);
+      this.loadPLY(fn, dest, root);
     }
     else if (extn.toUpperCase() === "OBJ" )
     {
-      this.loadOBJ(path);
+      this.loadOBJ(fn, dest, root);
     }
     else
     {
@@ -63,12 +78,12 @@ export default class Geometries
   }
 
   //load PLY file from path
-  loadPLY(path){
+  loadPLY(path, dest, root){
 
     const plyLoader = new PLYLoader();
     
-    plyLoader.load('/static/models/' + path, (geometry) => {
-    console.log('Loading : /static/models/' + path);
+    plyLoader.load(root + path, (geometry) => {
+    console.log('Loading : ' + root + path);
     geometry.computeVertexNormals();
 
     let visible = new Float32Array( geometry.attributes.position.count);
@@ -90,16 +105,17 @@ export default class Geometries
     pcd.name = path;
 
     let positions = geometry.getAttribute("position");
+    let count = positions.count
+
+    if(!geometry.getAttribute("color")){
+      geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
+    }
+
     let colors =  geometry.getAttribute("color");
-
-
-
     let colorsScaled = colors.array.map(x => x * 255.0);
 
 
     let state = path.substr(path.lastIndexOf('.') - 4, 4);
-
-    console.log(state);
 
     //temporary way of only doing this for images that have labels
     if(state === "Post"){
@@ -148,8 +164,8 @@ export default class Geometries
 
     pcd.scale.set(2, 2, 2);
 
-    //add to loaded files
-    this.files[path] = pcd;
+    //add to loaded filesInputsInputs
+    dest[path] = pcd;
     
     //dispatch event to say file loaded
     console.log(`Loaded : ${path}`);
@@ -158,13 +174,13 @@ export default class Geometries
     }
 
     //load OBJ file from path
-    loadOBJ(path){
+    loadOBJ(path, dest, root){
       {
         const objLoader = new OBJLoader2();
-        console.log('Loading : /static/models/' + path);
+        console.log('Loading : ' + root + path);
       
         //need to update this to properly parse the file
-        objLoader.load('/static/models/' + path, (geometry) => {
+        objLoader.load(root + path, (geometry) => {
       
           //hacky check for whether geometry in children
 
@@ -228,7 +244,7 @@ export default class Geometries
 
         object.labels = {};
       
-        this.files[path] = object;
+        dest[path] = object;
       
         //dispatch event to say file loaded
         console.log(`Loaded : ${path}`);

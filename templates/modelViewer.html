@@ -25,7 +25,15 @@ void main(){
 }
 </script>
 
+
+<script type="text/javascript">  
+    var inputFiles = {{ inputFiles|tojson }};  
+    var outputFiles = {{ outputFiles|tojson }};     
+</script>
+
 <script type="module" src="static/javascript/modelViewer.js" ></script>
+
+
 
 </body>
 

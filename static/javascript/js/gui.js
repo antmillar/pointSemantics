@@ -1,11 +1,11 @@
 export default class Controller
 {
 
-  constructor(view, geos)
+  constructor(view, model)
   {
     this.gui = new dat.GUI({width : '400px'});
     this.view = view;
-    this.geos = geos;
+    this.model = model;
     this.btnLoad = document.querySelector("#btnLoad");
     this.btnModel = document.querySelector("#btnModel");
     this.initialise();
@@ -22,7 +22,7 @@ export default class Controller
 
     const model = {
       runModel: function() {
-        document.querySelector("#fileName").value = that.geos.activeModel.name;
+        document.querySelector("#fileName").value = that.model.activeModel.name;
         document.querySelector('#btnModel').submit();
       }
    };
@@ -41,8 +41,12 @@ export default class Controller
       folder.addColor(color, 'modelcolor').name('Model Color').onChange((value) => this.changeColor(value));
 
       //create model dropdown
-      var folder2 = folder.addFolder('Input PLY Models');
-      var dropdown = folder2.add({fileName : ""}, 'fileName', Object.keys(that.geos.files));
+      var folderInputs = folder.addFolder('Input PLY Models');
+      var dropdownInputs = folderInputs.add({fileName : ""}, 'fileName', Object.keys(that.model.filesInputs));
+
+      //create model dropdown
+      var folderOutputs = folder.addFolder('Output PLY Models');
+      var dropdownOutputs = folderOutputs.add({fileName : ""}, 'fileName', Object.keys(that.model.filesOutputs));
 
       //run Model button
       this.gui.add(model, 'runModel').name("Run Model");
@@ -51,32 +55,32 @@ export default class Controller
       var folder3;
       var toggle = {};
 
-
       folder.open();
-      folder2.open();
+      folderInputs.open();
+      folderOutputs.open();
+
 
       //on change of the hidden model button to the model
-      this.btnModel.addEventListener('click', () => that.geos.runModel());
+      this.btnModel.addEventListener('click', () => that.model.runModel());
 
       //on change of the hidden load button load a file
-      this.btnLoad.addEventListener('change', () => that.geos.loadGeometry(btnLoad.files[0].name));
+      this.btnLoad.addEventListener('change', () => that.model.loadGeometry(btnLoad.filesInputs[0].name));
 
       //when file is loaded update the dropdown list
       this.btnLoad.addEventListener('loaded', function (e) {
 
-        dropdown = dropdown.options(Object.keys(that.geos.files))
-        dropdown.name('File Name');
-
-        dropdown.onChange(function(value) {
+        dropdownInputs = dropdownInputs.options(Object.keys(that.model.filesInputs))
+        dropdownInputs.name('File Name');
+        dropdownInputs.onChange(function(value) {
                
           //if active model present, remove it
-          if(that.geos.activeModel)
+          if(that.model.activeModel)
           {
-            that.view.scene.remove( that.geos.activeModel);
+            that.view.scene.remove( that.model.activeModel);
           }
 
-          that.geos.activeModel = that.geos.files[value];
-          let activeLabelCount = that.geos.activeModel.labels.length 
+          that.model.activeModel = that.model.filesInputs[value];
+          let activeLabelCount = that.model.activeModel.labels.length 
 
           folder.removeFolder("Filter Labels");
 
@@ -90,18 +94,57 @@ export default class Controller
 
           for(var i = 0; i< activeLabelCount; i++){
 
-            let key = objToString(that.geos.activeModel.labels[i])
-            toggle[that.geos.labelMap[key]] = true;
+            let key = objToString(that.model.activeModel.labels[i])
+            toggle[that.model.labelMap[key]] = true;
           }
 
           for(const key of Object.keys(toggle)){
             folder3.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
           }
 
-          that.view.scene.add(that.geos.activeModel);
+          that.view.scene.add(that.model.activeModel);
 
-          console.log(that.geos.activeModel)
+          console.log(that.model.activeModel)
       });
+
+
+      dropdownOutputs = dropdownOutputs.options(Object.keys(that.model.filesOutputs))
+      dropdownOutputs.name('File Name');
+      dropdownOutputs.onChange(function(value) {
+             
+        //if active model present, remove it
+        if(that.model.activeModel)
+        {
+          that.view.scene.remove( that.model.activeModel);
+        }
+
+        that.model.activeModel = that.model.filesOutputs[value];
+        let activeLabelCount = that.model.activeModel.labels.length 
+
+        folder.removeFolder("Filter Labels");
+
+        if(activeLabelCount> 0)
+        {
+        //refresh the contents of the labels folder                 
+
+          folder3 = folder.addFolder("Filter Labels");
+          toggle = {};
+        }
+
+        for(var i = 0; i< activeLabelCount; i++){
+
+          let key = objToString(that.model.activeModel.labels[i])
+          toggle[that.model.labelMap[key]] = true;
+        }
+
+        for(const key of Object.keys(toggle)){
+          folder3.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
+        }
+
+        that.view.scene.add(that.model.activeModel);
+
+        console.log(that.model.activeModel)
+    });
       
       }, false);
   }
@@ -111,9 +154,9 @@ export default class Controller
   {
     console.log("Changing Color of Active Model");
 
-    if(this.geos.activeModel){
+    if(this.model.activeModel){
 
-      var colors = this.geos.activeModel.geometry.attributes.color;
+      var colors = this.model.activeModel.geometry.attributes.color;
 
       //loop over the color attributes
       for ( var i = 0; i < colors.count; i ++ ) {
@@ -128,16 +171,16 @@ export default class Controller
   changeColorLabelled(bool, label)
   {
 
-    if(this.geos.activeModel){
+    if(this.model.activeModel){
 
-      var colors = this.geos.activeModel.geometry.attributes.color;
-      var visible = this.geos.activeModel.geometry.attributes.visible;
+      var colors = this.model.activeModel.geometry.attributes.color;
+      var visible = this.model.activeModel.geometry.attributes.visible;
 
 
       colors.needsUpdate = true;
       visible.needsUpdate = true;
 
-      const key = Object.keys(this.geos.labelMap).find(key => this.geos.labelMap[key] === label)
+      const key = Object.keys(this.model.labelMap).find(key => this.model.labelMap[key] === label)
       const vals = key.slice(1, key.length-1).split(", ");
       var cols = vals.map(Number);
       var cols = cols.map(x => x / 255.0);
@@ -151,7 +194,7 @@ export default class Controller
       //loop over the color attributes
       for ( var i = 0; i < colors.count; i ++ ) {
 
-        if(this.geos.activeModel.labelledPoints[i] === label)
+        if(this.model.activeModel.labelledPoints[i] === label)
         {
           if(bool){
             visible.setX(i, 2.0);

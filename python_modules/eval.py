@@ -45,6 +45,7 @@ labelMap = [
 def readPLY(fn):
 
     assert(os.path.isfile(fn))
+
     print("reading PLY file...")
     with open(fn, 'rb') as f:
         
@@ -81,9 +82,9 @@ def add_blank_cols(vertices):
 def save(scene_data):
     np.save(dir_data + "/numpy" , scene_data)
 
+
 def evaluate(fn, scene_data):
 
-    args = None
     print("preparing data...")
     dataset = ScannetDatasetWholeScene(scene_data)
     dataloader = DataLoader(dataset, batch_size= batch_size, collate_fn=collate_wholescene)
@@ -95,13 +96,13 @@ def evaluate(fn, scene_data):
     model.eval()
     
     print("labelling points...")
-    pred = predict_label(args, model, dataloader)
+    pred = predict_label(model, dataloader)
     
     print("saving PLY file...")
     save_to_PLY(fn, pred)
     
 
-def forward(args, model, coords, feats):
+def forward(model, coords, feats):
     pred = []
     coord_chunk, feat_chunk = torch.split(coords.squeeze(0), batch_size, 0), torch.split(feats.squeeze(0),batch_size, 0)
     assert len(coord_chunk) == len(feat_chunk)
@@ -139,7 +140,7 @@ def filter_points(coords, pred):
     return np.array(filtered)
 
 
-def predict_label(args, model, dataloader):
+def predict_label(model, dataloader):
     output_coords, output_pred = [], []
     print("predicting labels...")
     count = 0
@@ -151,7 +152,7 @@ def predict_label(args, model, dataloader):
         coords, feats, targets, weights = coords.cuda(), feats.cuda(), targets.cuda(), weights.cuda()
         
         # feed
-        pred = forward(args, model, coords, feats)
+        pred = forward(model, coords, feats)
 
         # dump
         coords = coords.squeeze(0).view(-1, 3).cpu().numpy()
@@ -195,8 +196,8 @@ def save_to_PLY(fn, pred):
     print("saved as " + output_fn )
 
 
-# TODO emails
-# TODO tidy up python code
+# TODO add in folders for inputs and outputs
+# TODO sort out the prediction part (segmentation)
+# TODO how to deal with overly large point clouds?
+# TODO how to convert to mesh??
 # TODO add separation between pre and post models
-# TODO add naming of post files and make sure can toggle colors
-# TODO allow coloured or b&w PLY and check it's a PLY

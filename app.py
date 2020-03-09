@@ -15,13 +15,15 @@ cwd = os.getcwd()
 path = cwd + '/models'
 upload_path = cwd + '/static/img/uploads'
 output_path = cwd + '/static/img/output'
-input_path = cwd + '/static/models/'
+input_path = cwd + '/static/models/inputs'
+output_path = cwd + '/static/models/outputs'
 
 # #Loading the saved model using fastai's load_learner method
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/modelViewer' , methods=["GET", "POST"])
 def modelViewer():
@@ -38,7 +40,12 @@ def modelViewer():
         # eval.save(data)
         eval.evaluate(fileName, data)
 
-    return render_template('modelViewer.html')
+    #get list of files
+    inputFiles = os.listdir(input_path)    
+    outputFiles = os.listdir(output_path)    
+
+    print(inputFiles)
+    return render_template('modelViewer.html', inputFiles = inputFiles , outputFiles = outputFiles)
 
 @app.route('/CPPN' , methods=["GET", "POST"])
 def cppn():
