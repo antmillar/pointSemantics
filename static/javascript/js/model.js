@@ -10,7 +10,8 @@ export default class Model
     this.name = name;
     this.filesInputs = {};
     this.filesOutputs = {};
-    this.activeModel;
+    this.activeModelInput;
+    this.activeModelOutput;
     this.labelMap =   {
 
     "[152, 223, 138]":		 "floor",

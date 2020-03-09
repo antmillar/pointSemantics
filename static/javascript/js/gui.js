@@ -22,7 +22,7 @@ export default class Controller
 
     const model = {
       runModel: function() {
-        document.querySelector("#fileName").value = that.model.activeModel.name;
+        document.querySelector("#fileName").value = that.model.activeModelInput.name;
         document.querySelector('#btnModel').submit();
       }
    };
@@ -32,33 +32,36 @@ export default class Controller
         modelcolor: 0.00
       };
 
-
       //set up the GUI
       this.gui.add(loader, 'loadFile').name("Load OBJ File");
-  
+
       var folder = this.gui.addFolder('Display Settings');
       //create color picker
       folder.addColor(color, 'modelcolor').name('Model Color').onChange((value) => this.changeColor(value));
 
       //create model dropdown
       var folderInputs = folder.addFolder('Input PLY Models');
+      var displayInputs = folderInputs.add({toggleDisplay : true}, 'toggleDisplay')
+      displayInputs.onChange((value) => this.display(value, that.model.activeModelInput))
       var dropdownInputs = folderInputs.add({fileName : ""}, 'fileName', Object.keys(that.model.filesInputs));
+
+      //run Model button
+      folderInputs.add(model, 'runModel').name("Run Model");
 
       //create model dropdown
       var folderOutputs = folder.addFolder('Output PLY Models');
+      var displayOutputs = folderOutputs.add({toggleDisplay : true}, 'toggleDisplay')
+      displayOutputs.onChange((value) => this.display(value,  that.model.activeModelOutput))
       var dropdownOutputs = folderOutputs.add({fileName : ""}, 'fileName', Object.keys(that.model.filesOutputs));
-
-      //run Model button
-      this.gui.add(model, 'runModel').name("Run Model");
-
+      var displayPointSize = folderOutputs.add({pointSize : 2.0}, 'pointSize', 0.0, 20.0)
+      displayPointSize.onChange((value) => this.changePointSize(value))
+ 
       //create list of labels available
-      var folder3;
       var toggle = {};
 
       folder.open();
       folderInputs.open();
       folderOutputs.open();
-
 
       //on change of the hidden model button to the model
       this.btnModel.addEventListener('click', () => that.model.runModel());
@@ -66,6 +69,7 @@ export default class Controller
       //on change of the hidden load button load a file
       this.btnLoad.addEventListener('change', () => that.model.loadGeometry(btnLoad.filesInputs[0].name));
 
+      //input file dropdown
       //when file is loaded update the dropdown list
       this.btnLoad.addEventListener('loaded', function (e) {
 
@@ -73,77 +77,59 @@ export default class Controller
         dropdownInputs.name('File Name');
         dropdownInputs.onChange(function(value) {
                
-          //if active model present, remove it
-          if(that.model.activeModel)
+          //if active input model present, remove it
+          if(that.model.activeModelInput)
           {
-            that.view.scene.remove( that.model.activeModel);
+            that.view.scene.remove( that.model.activeModelInput);
           }
 
-          that.model.activeModel = that.model.filesInputs[value];
-          let activeLabelCount = that.model.activeModel.labels.length 
+          that.model.activeModelInput = that.model.filesInputs[value];
 
-          folder.removeFolder("Filter Labels");
+          folder.removeFolder("Toggle Labels");
 
-          if(activeLabelCount> 0)
-          {
-          //refresh the contents of the labels folder                 
+          that.view.scene.add(that.model.activeModelInput);
 
-            folder3 = folder.addFolder("Filter Labels");
-            toggle = {};
-          }
-
-          for(var i = 0; i< activeLabelCount; i++){
-
-            let key = objToString(that.model.activeModel.labels[i])
-            toggle[that.model.labelMap[key]] = true;
-          }
-
-          for(const key of Object.keys(toggle)){
-            folder3.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
-          }
-
-          that.view.scene.add(that.model.activeModel);
-
-          console.log(that.model.activeModel)
+          console.log(that.model.activeModelInput)
       });
 
-
+      //output file dropdown
       dropdownOutputs = dropdownOutputs.options(Object.keys(that.model.filesOutputs))
       dropdownOutputs.name('File Name');
       dropdownOutputs.onChange(function(value) {
              
         //if active model present, remove it
-        if(that.model.activeModel)
+        if(that.model.activeModelOutput)
         {
-          that.view.scene.remove( that.model.activeModel);
+          that.view.scene.remove( that.model.activeModelOutput);
         }
 
-        that.model.activeModel = that.model.filesOutputs[value];
-        let activeLabelCount = that.model.activeModel.labels.length 
+        that.model.activeModelOutput = that.model.filesOutputs[value];
+        let activeLabelCount = that.model.activeModelOutput.labels.length 
 
-        folder.removeFolder("Filter Labels");
+        folder.removeFolder("Toggle Labels");
 
         if(activeLabelCount> 0)
         {
         //refresh the contents of the labels folder                 
 
-          folder3 = folder.addFolder("Filter Labels");
+          folderOutputs = folder.addFolder("Toggle Labels");
+          folderOutputs.open()
           toggle = {};
         }
 
         for(var i = 0; i< activeLabelCount; i++){
 
-          let key = objToString(that.model.activeModel.labels[i])
+          let key = objToString(that.model.activeModelOutput.labels[i])
           toggle[that.model.labelMap[key]] = true;
         }
 
         for(const key of Object.keys(toggle)){
-          folder3.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
+          folderOutputs.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
         }
 
-        that.view.scene.add(that.model.activeModel);
+        that.view.scene.add(that.model.activeModelOutput);
 
-        console.log(that.model.activeModel)
+        console.log(that.model.activeModelOutput)
     });
       
       }, false);
@@ -168,14 +154,14 @@ export default class Controller
     }
   }
 
+  //toggles point display by label via shaders
   changeColorLabelled(bool, label)
   {
 
-    if(this.model.activeModel){
+    if(this.model.activeModelOutput){
 
-      var colors = this.model.activeModel.geometry.attributes.color;
-      var visible = this.model.activeModel.geometry.attributes.visible;
-
+      var colors = this.model.activeModelOutput.geometry.attributes.color;
+      var visible = this.model.activeModelOutput.geometry.attributes.visible;
 
       colors.needsUpdate = true;
       visible.needsUpdate = true;
@@ -188,16 +174,13 @@ export default class Controller
       var onColor = new THREE.Color().fromArray(cols);
       console.log(onColor);
 
-      //need to save the toggle status
-
-
       //loop over the color attributes
       for ( var i = 0; i < colors.count; i ++ ) {
 
-        if(this.model.activeModel.labelledPoints[i] === label)
+        if(this.model.activeModelOutput.labelledPoints[i] === label)
         {
           if(bool){
-            visible.setX(i, 2.0);
+            visible.setX(i, 50.0);
           }
           else
           {
@@ -207,6 +190,40 @@ export default class Controller
       }
     }
   }
+
+  changePointSize(pointSize)
+  {
+    if(this.model.activeModelOutput){
+
+      var visible = this.model.activeModelOutput.geometry.attributes.visible;
+
+      visible.needsUpdate = true;
+
+      if(this.model.activeModelOutput.labels.length > 0) {
+      //loop over the color attributes
+        for ( var i = 0; i < visible.count; i ++ ) {
+
+            visible.setX(i, pointSize);
+        }
+      }
+    }
+  }
+
+  //need to fix case where model is changed and unticked
+  display(value, activeModel)
+  {
+    if(value)
+    {
+      this.view.scene.add( activeModel);
+    }
+    else
+    {
+      this.view.scene.remove( activeModel);
+    }
+  }
+
+
+  
   }
 
 
@@ -220,6 +237,7 @@ export default class Controller
     
     return str;
   }
+
 
 //https://stackoverflow.com/questions/14710559/dat-gui-how-to-hide-menu-with-code
   dat.GUI.prototype.removeFolder = function(name) {

@@ -201,3 +201,4 @@ def save_to_PLY(fn, pred):
 # TODO how to deal with overly large point clouds?
 # TODO how to convert to mesh??
 # TODO add separation between pre and post models
+# TODO allow variable point size so the overlay is clearer

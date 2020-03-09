@@ -44,7 +44,6 @@ def modelViewer():
     inputFiles = os.listdir(input_path)    
     outputFiles = os.listdir(output_path)    
 
-    print(inputFiles)
     return render_template('modelViewer.html', inputFiles = inputFiles , outputFiles = outputFiles)
 
 @app.route('/CPPN' , methods=["GET", "POST"])

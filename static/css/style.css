@@ -34,18 +34,6 @@ body {
 
 /* Scale canvas with resize attribute to full size */
 
-.masthead {
-  /* The image used */
-  background-image: url("/static/img/tempBackground.jpg");
-
-  /* Full height */
-  height: 100%;
-
-  /* Center and scale the image nicely */
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-}
 
 
 canvas[resize] {
@@ -84,6 +72,7 @@ button::-moz-focus-inner {
 
 .dg.main.a {
   margin-top : 50px;
+  width : 400px;
 }
 
 .dg.main.taller-than-window .close-button {
