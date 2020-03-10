@@ -40,6 +40,31 @@ export default class Model
     "[82, 84, 163]":      "otherfurn"
 
     }
+
+    // this.mapping = {
+
+    //  "floor"          :  {"color" : "[152, 223, 138]"	, "index" :  1},
+    //  "wall"           :  {"color" : "[174, 199, 232]" , "index" :  2},
+    //  "cabinet"        :  {"color" : "[31, 119, 180]" , "index" :  3},
+    //  "bed"            :  {"color" : "[255, 187, 120]", "index" :  4},
+    //  "chair"          :  {"color" : "[188, 189, 34]"	, "index" :  5},
+    //  "sofa"           :  {"color" : "[140, 86, 75]"	 , "index" :  6},
+    //  "table"          :  {"color" : "[255, 152, 150]", "index" :  7},
+    //  "door"           :  {"color" : "[214, 39, 40]", "index" :  8},
+    //  "window"         :  {"color" : "[197, 176, 213]", "index" : 9},
+    //  "bookshelf"      :  {"color" : "[148, 103, 189]", "index" :  10},
+    //  "picture"        :  {"color" : "[196, 156, 148]"	, "index" :  11},
+    //  "counter"        :  {"color" : "[23, 190, 207]"	, "index" :  12},
+    //  "desk"           :  {"color" : "[247, 182, 210]", "index" :  13},
+    //  "curtain"        :  {"color" : "[219, 219, 141]"	, "index" :  14},
+    //  "refrigerator"   :  {"color" : "[255, 127, 14]", "index" :  15},
+    //  "bathtub"        :  {"color" : "[227, 119, 194]"	, "index" :  16},
+    //  "shower curtain" :  {"color" : "[158, 218, 229]"	, "index" :  17},
+    //  "toilet"         :  {"color" : "[44, 160, 44]" 	, "index" :  18},
+    //  "sink"           :  {"color" : "[112, 128, 144]"	, "index" :  19},
+    //  "otherfurn"      :  {"color" : "[82, 84, 163]", "index" :  20}
+    // };
+    
     this.eventLoaded = new Event('loaded');
     this.pathInput = "/static/models/inputs/";
     this.pathOutput = "/static/models/outputs/";
@@ -93,77 +118,35 @@ export default class Model
     const plyLoader = new PLYLoader();
     
     plyLoader.load(root + path, (geometry) => {
+
     console.log('Loading : ' + root + path);
+
     geometry.computeVertexNormals();
 
+    //assign point sizes
     let pointSize = new Float32Array( geometry.attributes.position.count);
     pointSize.fill(this.defaultPointSize);
     geometry.setAttribute( 'pointSize', new THREE.BufferAttribute( pointSize, 1 ) );
 
+    //assign materials
     let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.1, vertexColors: THREE.VertexColors })
-
 
     let shaderMaterial = new THREE.ShaderMaterial({
 
       vertexShader : Shaders.vertexShader(),
       fragmentShader : Shaders.fragmentShader()
-
     })
 
-    material = shaderMaterial;
-
-    let pcd = new THREE.Points( geometry, material );
+    //create point cloud
+    let pcd = new THREE.Points( geometry, shaderMaterial );
     pcd.name = path;
+    pcd.labels = [];
+    pcd.rotation.x = -Math.PI / 2;
 
     let positions = geometry.getAttribute("position");
     let count = positions.count
 
-    if(!geometry.getAttribute("color")){
-      geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
-    }
-
-    let colors =  geometry.getAttribute("color");
-    let colorsScaled = colors.array.map(x => x * 255.0);
-
-
-    let state = path.substr(path.lastIndexOf('.') - 4, 4);
-
-    if(labelled){
-
-      //extract color r g b into triplets
-      var coords = colorsScaled.reduce(function(result, _, index, array) {
-
-        if(index % 3 === 0)
-        {
-          result.push(array.slice(index, index + 3));
-        }
-        return result
-
-      }, []);
-
-
-
-      pcd.labelledPoints = coords.map(x=> this.labelMap[objToString(x)]);
-
-      //extract the set of colors present
-      let set = new Set(coords.map(JSON.stringify));
-      let unique = Array.from(set).map(JSON.parse);
-
-      pcd.labels = unique;
-      pcd.toggles = [];
-
-    }
-    else
-    {
-      pcd.labels = [];
-    }
-
-    // //if from scannet need to rotate
-    // if(path.slice(0,5) === "scene")
-    // {
-    pcd.rotation.x = -Math.PI / 2;
-    // }
-    
+    //rescaling and translating for the canvas
     function average(nums){return nums.reduce((a, b) => (a + b)) / nums.length}
 
     let xMean = average(positions.array.filter((_,i) => i % 3 === 0));
@@ -178,14 +161,51 @@ export default class Model
 
     pcd.scale.set(2, 2, 2);
 
-    //add to loaded filesInputsInputs
+
+    //if no color present create new buffer attribute
+    if(!geometry.getAttribute("color")){
+      geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
+    }
+
+    let colors =  geometry.getAttribute("color");
+    let colorsScaled = colors.array.map(x => x * 255.0);
+
+    //if file has labels process these
+    if(labelled){
+
+
+      //extract color r g b into triplets as strings e.g [""]
+      var coords = colorsScaled.reduce(function(result, _, index, array) {
+
+        if(index % 3 === 0)
+        {
+          result.push(array.slice(index, index + 3));
+        }
+        return result
+
+      }, []);
+
+      pcd.labelledPoints = coords.map(x=> this.labelMap[objToString(x)]);
+
+      //extract the set of colors present
+      let set = new Set(coords.map(JSON.stringify));
+      let unique = Array.from(set).map(JSON.parse);
+
+      pcd.labels = unique.map(x => this.labelMap[objToString(x)]);
+      pcd.display = {};
+      pcd.labels.forEach(label => {pcd.display[label] = true;});
+      pcd.toggles = [];
+    }
+      
+    //add to loaded filesInputs
     dest[path] = pcd;
     
     //dispatch event to say file loaded
-    console.log(`Loaded : ${path}`);
     btnLoad.dispatchEvent(this.eventLoaded);
+    console.log(`Loaded : ${path}`);
     });
-    }
+  }
+
 
     //load OBJ file from path
     loadOBJ(path, dest, root){
@@ -256,8 +276,6 @@ export default class Model
 
         //assign vertex colors material to model
         initColor(object, mat);
-
-        object.labels = {};
       
         dest[path] = object;
       
@@ -276,6 +294,7 @@ export default class Model
 
         document.querySelector("#fileNameInput").value = this.activeModelInput.name;
         document.querySelector('#btnModel').submit();
+        alert("Running Model...");
 
         } else {
           alert("Warning : Please select an input PLY file to segment")
@@ -294,15 +313,33 @@ export default class Model
         // console.error("not implemented yet")
         if(this.activeModelOutput){
 
+          let filters = this.collateFilters();
+          document.querySelector("#filters").value = filters;
           document.querySelector("#fileNameOutput").value = this.activeModelOutput.name;
           document.querySelector('#btnMesh').submit();
+          alert("Generating Mesh...");
 
         } else {
           alert("Warning : Please select an output PLY file to be meshed")
         }
       }
 
+      //generate list of labels to be filtered server side
+      collateFilters()
+      {
+        var that = this;
+        let labelsToFilter = [];
 
+        Object.keys(that.activeModelOutput.display).forEach(function(item, index)
+        {
+          if(that.activeModelOutput.display[item] === false)
+          {
+            labelsToFilter.push(item)
+          }
+        })
+        
+        return labelsToFilter;
+      }
 }
 
 function objToString(obj)

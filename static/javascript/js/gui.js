@@ -111,19 +111,19 @@ export default class Controller
 
           folderOutputs = folder.addFolder("Toggle Labels");
           folderOutputs.open()
-          toggle = {};
+          // toggle = {};
         }
 
-        for(var i = 0; i< activeLabelCount; i++){
+        // for(var i = 0; i< activeLabelCount; i++){
 
-          let key = objToString(that.model.activeModelOutput.labels[i])
-          toggle[that.model.labelMap[key]] = true;
-        }
+        //   let key = objToString(that.model.activeModelOutput.labels[i])
+        //   toggle[that.model.labelMap[key]] = true;
+        // }
 
         that.model.activeModelOutput.toggles = toggle;
 
-        for(const key of Object.keys(toggle)){
-          folderOutputs.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
+        for(const key of Object.keys(that.model.activeModelOutput.display)){
+          folderOutputs.add(that.model.activeModelOutput.display, key).onChange((bool) => that.toggleDisplay(bool, key));;
         }
 
         that.view.scene.add(that.model.activeModelOutput);
@@ -144,30 +144,30 @@ export default class Controller
         }
 
         that.model.activeModelMesh = that.model.filesMeshes[value];
-        let activeLabelCount = that.model.activeModelMesh.labels.length 
+        // let activeLabelCount = that.model.activeModelMesh.labels.length 
 
-        folder.removeFolder("Toggle Labels");
+        // folder.removeFolder("Toggle Labels");
 
-        if(activeLabelCount> 0)
-        {
-        //refresh the contents of the labels folder                 
+        // if(activeLabelCount> 0)
+        // {
+        // //refresh the contents of the labels folder                 
 
-          folderMeshes = folder.addFolder("Toggle Labels");
-          folderMeshes.open()
-          toggle = {};
-        }
+        //   folderMeshes = folder.addFolder("Toggle Labels");
+        //   folderMeshes.open()
+        //   toggle = {};
+        // }
 
-        for(var i = 0; i< activeLabelCount; i++){
+        // for(var i = 0; i< activeLabelCount; i++){
 
-          let key = objToString(that.model.activeModelMesh.labels[i])
-          toggle[that.model.labelMap[key]] = true;
-        }
+        //   let key = objToString(that.model.activeModelMesh.labels[i])
+        //   toggle[that.model.labelMap[key]] = true;
+        // }
 
-        that.model.activeModelMesh.toggles = toggle;
+        // that.model.activeModelMesh.toggles = toggle;
 
-        for(const key of Object.keys(toggle)){
-          folderMeshes.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
-        }
+        // for(const key of Object.keys(toggle)){
+        //   folderMeshes.add(toggle, key).onChange((bool) => that.toggleDisplay(bool, key));;
+        // }
 
         that.view.scene.add(that.model.activeModelMesh);
 
@@ -197,10 +197,12 @@ export default class Controller
   }
 
   //toggles point display by label via shaders
-  changeColorLabelled(bool, label)
+  toggleDisplay(bool, label)
   {
 
     if(this.model.activeModelOutput){
+
+      this.model.activeModelOutput.display[label] = bool;
 
       var colors = this.model.activeModelOutput.geometry.attributes.color;
       var pointSize = this.model.activeModelOutput.geometry.attributes.pointSize;
@@ -270,12 +272,8 @@ export default class Controller
       this.view.scene.remove( activeModel);
     }
   }
-
-
   
   }
-
-
   function objToString(obj)
   {
     let arr = Object.values(obj);

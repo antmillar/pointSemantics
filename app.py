@@ -55,7 +55,11 @@ def modelViewer():
         elif (request.form.get("fileNameOutput")):
         
             fileName = request.form.get("fileNameOutput")
-            meshing.save_to_mesh(output_path, mesh_path, fileName)
+            filterList = []
+            if (request.form.get("filters")):
+                filterList = request.form.get("filters").split(",")
+            print(filterList)
+            meshing.save_to_mesh(output_path, mesh_path, fileName, filters = filterList)
             
         
     #get list of files
