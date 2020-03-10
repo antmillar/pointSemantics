@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import json
 import python_modules.eval as eval
+import python_modules.postprocess.meshing as meshing
 
 
 app = Flask(__name__ , static_url_path = '/static' )
@@ -54,13 +55,10 @@ def modelViewer():
         elif (request.form.get("fileNameOutput")):
         
             fileName = request.form.get("fileNameOutput")
+            meshing.save_to_mesh(output_path, mesh_path, fileName)
             
-            print("generating MESH!" + fileName)
-
-
         
     #get list of files
-
 
     return render_template('modelViewer.html', inputFiles = inputFiles , outputFiles = outputFiles, meshFiles = meshFiles)
 

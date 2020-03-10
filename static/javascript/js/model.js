@@ -128,10 +128,9 @@ export default class Model
 
     let state = path.substr(path.lastIndexOf('.') - 4, 4);
 
-    //temporary way of only doing this for images that have labels
     if(labelled){
 
-      //split coords into triplets
+      //extract color r g b into triplets
       var coords = colorsScaled.reduce(function(result, _, index, array) {
 
         if(index % 3 === 0)
@@ -142,8 +141,11 @@ export default class Model
 
       }, []);
 
+
+
       pcd.labelledPoints = coords.map(x=> this.labelMap[objToString(x)]);
 
+      //extract the set of colors present
       let set = new Set(coords.map(JSON.stringify));
       let unique = Array.from(set).map(JSON.parse);
 
@@ -230,15 +232,16 @@ export default class Model
             var positions = object.geometry.getAttribute("position");
 
             function average(nums){return nums.reduce((a, b) => (a + b)) / nums.length}
+            console.log(positions.count);
         
             let xMean = average(positions.array.filter((_,i) => i % 3 === 0));
             let yMean = average(positions.array.filter((_,i) => (i+1) % 3 === 0));
-            let zMean = Math.min(...positions.array.filter((_,i) => (i+2) % 3 === 0));
+            // let zMean = Math.min(...positions.array.filter((_,i) => (i+2) % 3 === 0));
         
             // console.log(xMean,yMean,zMean);
                 
             object.position.x = -xMean * scale;
-            object.position.y = -zMean * scale;
+            // object.position.y = -zMean * scale;
             object.position.z = -yMean * scale;
     
         const mat = new THREE.MeshPhongMaterial( { shininess: 10 , vertexColors: THREE.VertexColors } ); //color: 0xf1f1f1, 
