@@ -1,6 +1,7 @@
 //import loader helpers
 import {OBJLoader2} from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/loaders/OBJLoader2.js';
 import {PLYLoader} from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/loaders/PLYLoader.js';
+import Shaders from './shaders.js'
 
 export default class Model 
 {
@@ -10,8 +11,11 @@ export default class Model
     this.name = name;
     this.filesInputs = {};
     this.filesOutputs = {};
+    this.filesMeshes = {};
     this.activeModelInput;
     this.activeModelOutput;
+    this.activeModelMesh;
+
     this.labelMap =   {
 
     "[152, 223, 138]":		 "floor",
@@ -39,23 +43,28 @@ export default class Model
     this.eventLoaded = new Event('loaded');
     this.pathInput = "/static/models/inputs/";
     this.pathOutput = "/static/models/outputs/";
+    this.pathMesh = "/static/models/meshes/";
+    this.defaultPointSize = 3.0;
 
   }
 
   loadInputs(files)
   {
-    files.forEach((item) => this.loadGeometry(item, this.filesInputs, this.pathInput, this.pathInput));
-
+    files.forEach((item) => this.loadGeometry(item, this.filesInputs, this.pathInput));
   }
 
   loadOutputs(files)
   {
-    files.forEach((item) => this.loadGeometry(item, this.filesOutputs, this.pathOutput, this.pathOutput));
-
+    files.forEach((item) => this.loadGeometry(item, this.filesOutputs, this.pathOutput, true));
   }
 
+  loadMeshes(files)
+  {
+    files.forEach((item) => this.loadGeometry(item, this.filesMeshes, this.pathMesh, true));
+  }
+  
   //load geometry from a path
-  loadGeometry(fn, dest, root)
+  loadGeometry(fn, dest, root, labelled = false)
   {
     let extn = fn.substr(fn.lastIndexOf('.') + 1);
 
@@ -65,7 +74,7 @@ export default class Model
     }
     else if(extn.toUpperCase() === "PLY")
     {
-      this.loadPLY(fn, dest, root);
+      this.loadPLY(fn, dest, root, labelled);
     }
     else if (extn.toUpperCase() === "OBJ" )
     {
@@ -79,7 +88,7 @@ export default class Model
   }
 
   //load PLY file from path
-  loadPLY(path, dest, root){
+  loadPLY(path, dest, root, labelled){
 
     const plyLoader = new PLYLoader();
     
@@ -87,17 +96,18 @@ export default class Model
     console.log('Loading : ' + root + path);
     geometry.computeVertexNormals();
 
-    let visible = new Float32Array( geometry.attributes.position.count);
-    visible.fill(2.0);
-    geometry.setAttribute( 'visible', new THREE.BufferAttribute( visible, 1 ) );
+    let pointSize = new Float32Array( geometry.attributes.position.count);
+    pointSize.fill(this.defaultPointSize);
+    geometry.setAttribute( 'pointSize', new THREE.BufferAttribute( pointSize, 1 ) );
 
     let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.1, vertexColors: THREE.VertexColors })
 
 
     let shaderMaterial = new THREE.ShaderMaterial({
 
-      vertexShader : document.querySelector("#vtxShader").textContent,
-      fragmentShader : document.querySelector("#frgShader").textContent
+      vertexShader : Shaders.vertexShader(),
+      fragmentShader : Shaders.fragmentShader()
+
     })
 
     material = shaderMaterial;
@@ -119,7 +129,7 @@ export default class Model
     let state = path.substr(path.lastIndexOf('.') - 4, 4);
 
     //temporary way of only doing this for images that have labels
-    if(state === "Post"){
+    if(labelled){
 
       //split coords into triplets
       var coords = colorsScaled.reduce(function(result, _, index, array) {
@@ -138,6 +148,7 @@ export default class Model
       let unique = Array.from(set).map(JSON.parse);
 
       pcd.labels = unique;
+      pcd.toggles = [];
 
     }
     else
@@ -254,11 +265,18 @@ export default class Model
       }
       }
 
-      //running the model on PLY file
+      //running the model on input PLY file
       runModel()
       {
-        console.error("not implemented yet")
-        console.log(this.activeModel)
+
+        if(this.activeModelInput){
+
+        document.querySelector("#fileNameInput").value = this.activeModelInput.name;
+        document.querySelector('#btnModel').submit();
+
+        } else {
+          alert("Warning : Please select an input PLY file to segment")
+        }
         //to implement here
 
         //check if the input is PLY file
@@ -268,9 +286,21 @@ export default class Model
       }
 
 
+      createMesh()
+      {
+        // console.error("not implemented yet")
+        if(this.activeModelOutput){
+
+          document.querySelector("#fileNameOutput").value = this.activeModelOutput.name;
+          document.querySelector('#btnMesh').submit();
+
+        } else {
+          alert("Warning : Please select an output PLY file to be meshed")
+        }
+      }
+
+
 }
-
-
 
 function objToString(obj)
 {

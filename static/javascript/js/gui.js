@@ -7,6 +7,7 @@ export default class Controller
     this.view = view;
     this.model = model;
     this.btnLoad = document.querySelector("#btnLoad");
+    this.btnMesh = document.querySelector('#btnMesh');
     this.btnModel = document.querySelector("#btnModel");
     this.initialise();
   }
@@ -16,45 +17,45 @@ export default class Controller
     var that = this;
 
     //when load gui button is clicked, simulates a click of the hidden load button 
-    const loader = {
-        loadFile: function() {document.querySelector('#btnLoad').click();}
+    const controls = {
+        loadFile: function() {document.querySelector('#btnLoad').click();},
+        createMesh : function() {that.model.createMesh()},
+        runModel: function() {that.model.runModel()},
     };
 
-    const model = {
-      runModel: function() {
-        document.querySelector("#fileName").value = that.model.activeModelInput.name;
-        document.querySelector('#btnModel').submit();
-      }
-   };
-
-    //set default color for color picker
-    const color =  {
-        modelcolor: 0.00
-      };
+      //on change of the hidden load button load a file
+      this.btnLoad.addEventListener('change', () => that.model.loadGeometry(btnLoad.filesInputs[0].name));
 
       //set up the GUI
-      this.gui.add(loader, 'loadFile').name("Load OBJ File");
+      this.gui.add(controls, 'loadFile').name("Load OBJ File");
 
       var folder = this.gui.addFolder('Display Settings');
       //create color picker
-      folder.addColor(color, 'modelcolor').name('Model Color').onChange((value) => this.changeColor(value));
+      folder.addColor({modelcolor: 0.00}, 'modelcolor').name('Model Color').onChange((value) => this.changeColor(value));
 
       //create model dropdown
       var folderInputs = folder.addFolder('Input PLY Models');
-      var displayInputs = folderInputs.add({toggleDisplay : true}, 'toggleDisplay')
-      displayInputs.onChange((value) => this.display(value, that.model.activeModelInput))
+      var displayInputs = folderInputs.add({toggleDisplay : true}, 'toggleDisplay');
+      displayInputs.onChange((value) => this.display(value, that.model.activeModelInput));
       var dropdownInputs = folderInputs.add({fileName : ""}, 'fileName', Object.keys(that.model.filesInputs));
 
       //run Model button
-      folderInputs.add(model, 'runModel').name("Run Model");
+      folderInputs.add(controls, 'runModel').name("Run Model");
 
       //create model dropdown
       var folderOutputs = folder.addFolder('Output PLY Models');
-      var displayOutputs = folderOutputs.add({toggleDisplay : true}, 'toggleDisplay')
-      displayOutputs.onChange((value) => this.display(value,  that.model.activeModelOutput))
+      var displayOutputs = folderOutputs.add({toggleDisplay : true}, 'toggleDisplay');
+      displayOutputs.onChange((value) => this.display(value,  that.model.activeModelOutput));
       var dropdownOutputs = folderOutputs.add({fileName : ""}, 'fileName', Object.keys(that.model.filesOutputs));
-      var displayPointSize = folderOutputs.add({pointSize : 2.0}, 'pointSize', 0.0, 20.0)
-      displayPointSize.onChange((value) => this.changePointSize(value))
+      var displayPointSize = folderOutputs.add({pointSize : 3.0}, 'pointSize', 0.0, 20.0);
+      displayPointSize.onChange((value) => this.changePointSize(value));
+      folderOutputs.add(controls, 'createMesh').name("Create Mesh");
+
+      //create mesh dropdown
+      var folderMeshes = folder.addFolder('Output Meshes');
+      var displayMeshes = folderMeshes.add({toggleDisplay : true}, 'toggleDisplay');
+      displayMeshes.onChange((value) => this.display(value,  that.model.activeModelMesh));
+      var dropdownMeshes = folderMeshes.add({fileName : ""}, 'fileName', Object.keys(that.model.filesMeshes));
  
       //create list of labels available
       var toggle = {};
@@ -62,12 +63,8 @@ export default class Controller
       folder.open();
       folderInputs.open();
       folderOutputs.open();
+      folderMeshes.open();
 
-      //on change of the hidden model button to the model
-      this.btnModel.addEventListener('click', () => that.model.runModel());
-
-      //on change of the hidden load button load a file
-      this.btnLoad.addEventListener('change', () => that.model.loadGeometry(btnLoad.filesInputs[0].name));
 
       //input file dropdown
       //when file is loaded update the dropdown list
@@ -123,6 +120,8 @@ export default class Controller
           toggle[that.model.labelMap[key]] = true;
         }
 
+        that.model.activeModelOutput.toggles = toggle;
+
         for(const key of Object.keys(toggle)){
           folderOutputs.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
         }
@@ -130,6 +129,49 @@ export default class Controller
         that.view.scene.add(that.model.activeModelOutput);
 
         console.log(that.model.activeModelOutput)
+    });
+
+
+      //output mesh dropdown
+      dropdownMeshes = dropdownMeshes.options(Object.keys(that.model.filesMeshes))
+      dropdownMeshes.name('File Name');
+      dropdownMeshes.onChange(function(value) {
+             
+        //if active model present, remove it
+        if(that.model.activeModelMesh)
+        {
+          that.view.scene.remove( that.model.activeModelMesh);
+        }
+
+        that.model.activeModelMesh = that.model.filesMeshes[value];
+        let activeLabelCount = that.model.activeModelMesh.labels.length 
+
+        folder.removeFolder("Toggle Labels");
+
+        if(activeLabelCount> 0)
+        {
+        //refresh the contents of the labels folder                 
+
+          folderMeshes = folder.addFolder("Toggle Labels");
+          folderMeshes.open()
+          toggle = {};
+        }
+
+        for(var i = 0; i< activeLabelCount; i++){
+
+          let key = objToString(that.model.activeModelMesh.labels[i])
+          toggle[that.model.labelMap[key]] = true;
+        }
+
+        that.model.activeModelMesh.toggles = toggle;
+
+        for(const key of Object.keys(toggle)){
+          folderMeshes.add(toggle, key).onChange((bool) => that.changeColorLabelled(bool, key));;
+        }
+
+        that.view.scene.add(that.model.activeModelMesh);
+
+        console.log(that.model.activeModelMesh)
     });
       
       }, false);
@@ -140,9 +182,9 @@ export default class Controller
   {
     console.log("Changing Color of Active Model");
 
-    if(this.model.activeModel){
+    if(this.model.activeModelInput){
 
-      var colors = this.model.activeModel.geometry.attributes.color;
+      var colors = this.model.activeModelInput.geometry.attributes.color;
 
       //loop over the color attributes
       for ( var i = 0; i < colors.count; i ++ ) {
@@ -161,10 +203,10 @@ export default class Controller
     if(this.model.activeModelOutput){
 
       var colors = this.model.activeModelOutput.geometry.attributes.color;
-      var visible = this.model.activeModelOutput.geometry.attributes.visible;
+      var pointSize = this.model.activeModelOutput.geometry.attributes.pointSize;
 
       colors.needsUpdate = true;
-      visible.needsUpdate = true;
+      pointSize.needsUpdate = true;
 
       const key = Object.keys(this.model.labelMap).find(key => this.model.labelMap[key] === label)
       const vals = key.slice(1, key.length-1).split(", ");
@@ -180,30 +222,37 @@ export default class Controller
         if(this.model.activeModelOutput.labelledPoints[i] === label)
         {
           if(bool){
-            visible.setX(i, 50.0);
+            pointSize.setX(i, this.model.defaultPointSize);
           }
           else
           {
-            visible.setX(i, 0.0);
+            pointSize.setX(i, 0.0);
           }
         }
       }
     }
+
+    this.model.activeModelOutput.toggles[label] = bool;
+    console.log(this.model.activeModelOutput)
   }
 
   changePointSize(pointSize)
   {
     if(this.model.activeModelOutput){
 
-      var visible = this.model.activeModelOutput.geometry.attributes.visible;
-
-      visible.needsUpdate = true;
+      var attrPointSize = this.model.activeModelOutput.geometry.attributes.pointSize;
+      this.model.defaultPointSize = pointSize;
+      attrPointSize.needsUpdate = true;
 
       if(this.model.activeModelOutput.labels.length > 0) {
       //loop over the color attributes
-        for ( var i = 0; i < visible.count; i ++ ) {
+        for ( var i = 0; i < attrPointSize.count; i ++ ) {
 
-            visible.setX(i, pointSize);
+          //check if the point is disabled
+          if(attrPointSize.getX(i) != 0.0){
+
+            attrPointSize.setX(i, pointSize);
+          }
         }
       }
     }

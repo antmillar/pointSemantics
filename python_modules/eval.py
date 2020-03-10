@@ -196,9 +196,28 @@ def save_to_PLY(fn, pred):
     print("saved as " + output_fn )
 
 
-# TODO add in folders for inputs and outputs
 # TODO sort out the prediction part (segmentation)
 # TODO how to deal with overly large point clouds?
 # TODO how to convert to mesh??
-# TODO add separation between pre and post models
-# TODO allow variable point size so the overlay is clearer
+# TODO add toggle attribute to the geometry to indicate whether the label is activated or not
+# TODO fix problem when the size is set to zero and use activated parameter instead
+# TODO show the output if present else not, and have two toggles
+# TODO put the shader in it's own script
+
+# things to figure out: how to downsample mesh beforehand?? check npy file sizes 
+# how to compute the subvolume size to prevent overflow
+# how to convert the pcd to mesh
+
+#scenes have 120k ish points
+#my scans have 1mio ish points
+#npy files have?? more points and they are splits?! 150-200k in the parts...??
+# figure out what the preprocessing is doing??
+
+# update the output files once model has been  added
+# stop submit of post request on refresh 
+# manually loading the OBJ File doesn't allow me to use pointsize
+
+# add mesh conversion
+# add mesh gui
+
+# update output/mesh list on model

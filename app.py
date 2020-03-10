@@ -17,7 +17,7 @@ upload_path = cwd + '/static/img/uploads'
 output_path = cwd + '/static/img/output'
 input_path = cwd + '/static/models/inputs'
 output_path = cwd + '/static/models/outputs'
-
+mesh_path = cwd + '/static/models/meshes'
 # #Loading the saved model using fastai's load_learner method
 
 @app.route('/')
@@ -28,23 +28,41 @@ def index():
 @app.route('/modelViewer' , methods=["GET", "POST"])
 def modelViewer():
 
-    if request.method == "POST":
-
-        torch.cuda.empty_cache()
-        fileName = request.form.get("fileName")
-        print(input_path + fileName)
-        vertexData = eval.readPLY(input_path + "/toilets4kRGB.ply")
-        print(vertexData.shape)
-        data = eval.add_blank_cols(vertexData)
-        print(data.shape)
-        # eval.save(data)
-        eval.evaluate(fileName, data)
-
-    #get list of files
     inputFiles = os.listdir(input_path)    
     outputFiles = os.listdir(output_path)    
+    meshFiles = os.listdir(mesh_path)  
 
-    return render_template('modelViewer.html', inputFiles = inputFiles , outputFiles = outputFiles)
+    if request.method == "POST":
+
+        if(request.form.get("fileNameInput")):
+        
+            fileName = request.form.get("fileNameInput")
+            torch.cuda.empty_cache()
+            # fileName = request.form.get("fileName")
+            print(fileName)
+
+            # return redirect(url_for('modelViewer', inputFiles = inputFiles , outputFiles = outputFiles))
+
+            # if(fileName):
+            print(input_path + "/" + fileName)
+            vertexData = eval.readPLY(input_path + "/" +  fileName)
+            print(vertexData.shape)
+            data = eval.add_blank_cols(vertexData)
+            print(data.shape)
+            eval.evaluate(fileName, data)
+        
+        elif (request.form.get("fileNameOutput")):
+        
+            fileName = request.form.get("fileNameOutput")
+            
+            print("generating MESH!" + fileName)
+
+
+        
+    #get list of files
+
+
+    return render_template('modelViewer.html', inputFiles = inputFiles , outputFiles = outputFiles, meshFiles = meshFiles)
 
 @app.route('/CPPN' , methods=["GET", "POST"])
 def cppn():

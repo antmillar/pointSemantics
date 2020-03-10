@@ -4,43 +4,32 @@
 <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js'></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-<script type = "x-shader/x-vertex" id = "vtxShader"> 
-attribute float visible;
-attribute vec3 color;
-varying vec3 shaderColor;
-
-void main()
-{
-    gl_PointSize = visible;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    shaderColor = color;
-}
-</script>
-
-<script type = "x-shader/x-fragment" id = "frgShader">
-varying vec3 shaderColor;
-
-void main(){
-    gl_FragColor = vec4(shaderColor, 1.0);
-}
-</script>
-
 
 <script type="text/javascript">  
     var inputFiles = {{ inputFiles|tojson }};  
     var outputFiles = {{ outputFiles|tojson }};     
+
+    {% if meshFiles %}
+        var meshFiles = {{ meshFiles|tojson }}; 
+        
+    {% else %}
+        var meshFiles = [];    
+
+    {% endif %}
 </script>
 
-<script type="module" src="static/javascript/modelViewer.js" ></script>
-
-
+<script type="module" src="static/javascript/modelViewer.js"  ></script>
 
 </body>
 
 <input id = "btnLoad" type = "file" style = "visibility: hidden;">
 
 <form action="" method="POST" id = "btnModel">
-    <input type="hidden" id = "fileName" name = "fileName">
+    <input type="hidden" id = "fileNameInput" name = "fileNameInput">
+</form>
+
+<form action="" method="POST" id = "btnMesh">
+    <input type="hidden" id = "fileNameOutput" name = "fileNameOutput">
 </form>
 
 <canvas id="c"></canvas>
