@@ -6,14 +6,17 @@ export default class Shaders
         return `
         
         attribute float pointSize;
+        attribute float opacity;
         attribute vec3 color;
         varying vec3 shaderColor;
+        varying float shaderOpacity;
         
         void main()
         {
             gl_PointSize = pointSize;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             shaderColor = color;
+            shaderOpacity = opacity;
         }
         `
 
@@ -24,9 +27,11 @@ export default class Shaders
     {
         return `
         varying vec3 shaderColor;
+        varying float shaderOpacity;
 
         void main(){
-            gl_FragColor = vec4(shaderColor, 1.0);
+            
+            gl_FragColor = vec4(shaderColor, shaderOpacity);
         }
         `
 

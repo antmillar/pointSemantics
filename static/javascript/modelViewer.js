@@ -11,6 +11,17 @@ var model = new Model();
 var controller = new Controller(view, model);
 
 
+// function worker() {
+//     $.get('progress/' + 1, function(data) {
+//         if (data < 100) {
+//             console.log(data)
+//             setTimeout(worker, 1000)
+//         }
+//     })
+// }
+
+// worker()
+
 //preload files present
 model.loadInputs(inputFiles);
 model.loadOutputs(outputFiles);

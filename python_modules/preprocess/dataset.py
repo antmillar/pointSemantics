@@ -23,6 +23,7 @@ class ScannetDatasetWholeScene():
         #load the numpy file
         scene_data = self.scene_data
         scene_data[:, 3:6] /= 255. # normalize the rgb values
+
         self.scene_points_list.append(scene_data[:, :6])
         self.semantic_labels_list.append(scene_data[:, 7])
 
@@ -37,6 +38,7 @@ class ScannetDatasetWholeScene():
         else:
             self.labelweights = np.ones(NUM_CLASSES)
 
+    #index is the sub scene index, not point index
     def __getitem__(self, index):
         start = time.time()
         #point_set_ini contains all the points in the pcd
@@ -46,6 +48,7 @@ class ScannetDatasetWholeScene():
         ##max coord for each dimension
         coordmax = point_set_ini[:, :3].max(axis=0)
         coordmin = point_set_ini[:, :3].min(axis=0)
+        #dims of the subvolume
         xlength = 5. #1.5
         ylength = 5. #1.5
 
@@ -60,14 +63,15 @@ class ScannetDatasetWholeScene():
         print(nsubvolume_x)
         print(nsubvolume_y)
 
+        #loop over subvolumes of size xLength * yLength * height in the scene
         for i in range(nsubvolume_x):
 
             for j in range(nsubvolume_y):
 
-
                 #range of the current subvolume
                 curmin = coordmin+[i*xlength, j*ylength, 0]
                 curmax = coordmin+[(i+1)*xlength, (j+1)*ylength, coordmax[2]-coordmin[2]]
+                
                 #find points within the subvolume 
                 mask = np.all((point_set_ini[:, :3]>=curmin)*(point_set_ini[:, :3]<=curmax), axis=1)
                 cur_point_set = point_set_ini[mask,:]
@@ -77,8 +81,10 @@ class ScannetDatasetWholeScene():
                 if len(cur_semantic_seg) == 0:
                     continue
 
+                print(len(cur_semantic_seg))
                 #select 8192 random points from the pt indices in the subvolume
                 choice = np.random.choice(len(cur_semantic_seg), self.npoints, replace=True)
+
                 #get these points from current point set
                 point_set = cur_point_set[choice,:] # Nx3
                 semantic_seg = cur_semantic_seg[choice] # N
@@ -98,17 +104,20 @@ class ScannetDatasetWholeScene():
                 semantic_segs.append(np.expand_dims(semantic_seg,0)) # 1xN
                 sample_weights.append(np.expand_dims(sample_weight,0)) # 1xN
    
+       
         point_sets = np.concatenate(tuple(point_sets),axis=0)
         semantic_segs = np.concatenate(tuple(semantic_segs),axis=0)
         sample_weights = np.concatenate(tuple(sample_weights),axis=0)
 
         fetch_time = time.time() - start
-
         return point_sets, semantic_segs, sample_weights, fetch_time
 
     def __len__(self):
+        #this returns the number of sub scenes in the scene, not the number of points
         return len(self.scene_points_list)
 
+
+#collate a single scene
 def collate_random(data):
     '''
     for ScannetDataset: collate_fn=collate_random
@@ -120,7 +129,7 @@ def collate_random(data):
         fetch_time           # float
     '''
 
-    # load data
+    # load data (zip the subvolumes)
     (
         point_set, 
         semantic_seg, 
@@ -128,7 +137,7 @@ def collate_random(data):
         fetch_time 
     ) = zip(*data)
 
-    # convert to tensor
+    #dataset contains subvolumes, this collates them into a tensor
     point_set = torch.FloatTensor(point_set)
     semantic_seg = torch.LongTensor(semantic_seg)
     sample_weight = torch.FloatTensor(sample_weight)
@@ -148,6 +157,8 @@ def collate_random(data):
 
     return batch
 
+#can collate multiple scenes/scene slices
+
 def collate_wholescene(data):
     '''
     for ScannetDataset: collate_fn=collate_random
@@ -159,7 +170,7 @@ def collate_wholescene(data):
         fetch_time           # float
     '''
 
-    # load data
+    # load data (zip the subvolumes)
     (
         point_sets, 
         semantic_segs, 
@@ -167,8 +178,9 @@ def collate_wholescene(data):
         fetch_time 
     ) = zip(*data)
 
-    # convert to tensor
+    #dataset contains subvolumes, this collates them into a tensor
     point_sets = torch.FloatTensor(point_sets)
+    print(point_sets.shape)
     semantic_segs = torch.LongTensor(semantic_segs)
     sample_weights = torch.FloatTensor(sample_weights)
 

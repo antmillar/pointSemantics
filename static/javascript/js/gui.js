@@ -38,6 +38,8 @@ export default class Controller
       var displayInputs = folderInputs.add({toggleDisplay : true}, 'toggleDisplay');
       displayInputs.onChange((value) => this.display(value, that.model.activeModelInput));
       var dropdownInputs = folderInputs.add({fileName : ""}, 'fileName', Object.keys(that.model.filesInputs));
+      var displayOpacity = folderInputs.add({opacity : 0.2}, 'opacity', 0.0, 0.2);
+      displayOpacity.onChange((value) => this.changeOpacity(value));
 
       //run Model button
       folderInputs.add(controls, 'runModel').name("Run Model");
@@ -206,9 +208,11 @@ export default class Controller
 
       var colors = this.model.activeModelOutput.geometry.attributes.color;
       var pointSize = this.model.activeModelOutput.geometry.attributes.pointSize;
-
+      var opacity  = this.model.activeModelOutput.geometry.attributes.opacity;
+      
       colors.needsUpdate = true;
       pointSize.needsUpdate = true;
+      opacity.needsUpdate = true;
 
       const key = Object.keys(this.model.labelMap).find(key => this.model.labelMap[key] === label)
       const vals = key.slice(1, key.length-1).split(", ");
@@ -257,6 +261,28 @@ export default class Controller
           }
         }
       }
+    }
+  }
+
+
+
+  changeOpacity(opacity)
+  {
+    if(this.model.activeModelInput){
+
+  
+      var attrOpacity = this.model.activeModelInput.geometry.attributes.opacity;
+      this.model.defaultOpacity = opacity;
+      attrOpacity.needsUpdate = true;
+      
+
+      //loop pts
+        for ( var i = 0; i < attrOpacity.count; i ++ ) {
+
+            attrOpacity.setX(i, opacity);
+          
+        }
+      
     }
   }
 

@@ -70,6 +70,7 @@ export default class Model
     this.pathOutput = "/static/models/outputs/";
     this.pathMesh = "/static/models/meshes/";
     this.defaultPointSize = 3.0;
+    this.defaultOpacity = 1.0;
 
   }
 
@@ -105,6 +106,10 @@ export default class Model
     {
       this.loadOBJ(fn, dest, root);
     }
+    else if (extn.toUpperCase() === "MTL" )
+    {
+      console.log(`Skipped MTL File : ${fn}`);
+    }
     else
     {
       console.error("Invalid Path Extension");
@@ -128,14 +133,23 @@ export default class Model
     pointSize.fill(this.defaultPointSize);
     geometry.setAttribute( 'pointSize', new THREE.BufferAttribute( pointSize, 1 ) );
 
+    //assign opacity
+    let opacity = new Float32Array( geometry.attributes.position.count);
+    opacity.fill(this.defaultOpacity);
+    geometry.setAttribute( 'opacity', new THREE.BufferAttribute( opacity, 1.0 ) );
+
     //assign materials
     let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.1, vertexColors: THREE.VertexColors })
 
     let shaderMaterial = new THREE.ShaderMaterial({
 
       vertexShader : Shaders.vertexShader(),
-      fragmentShader : Shaders.fragmentShader()
+      fragmentShader : Shaders.fragmentShader(),
+      // blending: THREE.AdditiveBlending,
+      depthTest: false,
+      transparent: true,
     })
+
 
     //create point cloud
     let pcd = new THREE.Points( geometry, shaderMaterial );
@@ -228,19 +242,6 @@ export default class Model
           object.name = path;
           var count = object.geometry.attributes.position.count;
           
-          if(path != "scene3colPost.obj"){
-          object.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
-    
-          var color = new THREE.Color();
-          var colors1 = object.geometry.attributes.color;
-
-      
-            for ( var i = 0; i < count; i ++ ) {
-              var choice = Math.floor(Math.random() * 4);
-              color.setRGB(0.75, 0.75, 0.75);
-              colors1.setXYZ( i, color.r, color.g, color.b );
-            }
-          }
             let scale = 2;
             if(path.slice(0,5) == "chair"){
             scale = 0.005
@@ -316,6 +317,7 @@ export default class Model
           let filters = this.collateFilters();
           document.querySelector("#filters").value = filters;
           document.querySelector("#fileNameOutput").value = this.activeModelOutput.name;
+
           document.querySelector('#btnMesh').submit();
           alert("Generating Mesh...");
 

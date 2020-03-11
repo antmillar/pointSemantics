@@ -6,7 +6,7 @@ import numpy as np
 directory = '/home/anthony/repos/Datasets/ScanNet/scans'
 
 #loop over all the scan directories and calculates the statistics
-#I ran this before and just stored the statistics
+
 def get_scannet_stats():
 
     subfolderList = [item[2] for item in os.walk(directory)]
@@ -34,15 +34,20 @@ def get_scannet_stats():
     print("minmax : " + str(minmax/count))
     print("variance : " + str(variance/count))
 
+#I ran the above function before and stored these statistics
 
 SCANNET_MEANS = [3.08072124, 2.93721497, 0.87943835]
 SCANNET_MINS = [3.66360635e-01, 3.56836237e-01, 2.92708193e-03]
 SCANNET_MAXS = [5.89, 5.48, 2.41]
 SCANNET_VARS = [2.32206428, 2.07387446, 0.40561404]
+SCANNET_VOLUME = 75 #average volume in m3
+SCANNET_PTNUM = 150000 #average pts per scene
+SCANNET_DENSITY = 2000 #average pts per m3
 
 root_path = "/home/anthony/Downloads/"
 
-def normalize_point_cloud(path):
+
+def normalize_point_cloud(path : str):
 
     print(root_path + path)
     pcd = o3d.io.read_point_cloud(root_path + path)
@@ -58,7 +63,7 @@ def normalize_point_cloud(path):
     zMin = stats.describe(pcd_pts).minmax[0][2]
 
     normalisedPts = np.zeros(pcd_pts.shape)
-    #place the model on the plane
+    #place the model on the plane, not really "normalising" here, more just translating 
     normalisedPts[:,0] = ((pcd_pts[:,0] - xMin))
     normalisedPts[:,1] = ((pcd_pts[:,1] - yMin))
     normalisedPts[:,2] = ((pcd_pts[:,2] - zMin))
@@ -83,3 +88,16 @@ def normalize_point_cloud(path):
     print("saved to : " + outputFileName)
 
 
+def remove_outliers(root : str, fn : str):
+    
+    pcd = o3d.io.read_point_cloud(root + "/" + fn)
+    nnDist = np.mean(pcd.compute_nearest_neighbor_distance())
+    print(f"unfiltered point count : {len(pcd.points)}")
+    pcd, _ = pcd.remove_statistical_outlier(nb_neighbors=8, std_ratio=2.5)
+    print(f"after statistical outliers removed : {len(pcd.points)}")
+    pcd, _ = pcd.remove_radius_outlier(nb_points=2, radius=nnDist * 2.5)
+    print(f"after radius outliers removed : {len(pcd.points)}")
+
+    #save filtered pcd
+    o3d.io.write_point_cloud(root + "/" + "filtered_" + fn, pcd)
+    # getstats(filtered)

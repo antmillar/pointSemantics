@@ -1,7 +1,7 @@
 import open3d as o3d
 import numpy as np
 
-def save_to_mesh(folder, dest, fn, filters):
+def save_to_mesh(folder, dest, fn, filters, reconstruction_method = "ballpivot"):
 
     print("loading PLY file...")
     pcd = o3d.io.read_point_cloud(folder + "/" + fn)
@@ -14,14 +14,36 @@ def save_to_mesh(folder, dest, fn, filters):
     print("estimating normals...")
     pcd.estimate_normals()
 
-    print("calculating poisson reconstruction...")
-    
-    mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth = 10)
+    #ball pivot reconstruction - doesn't required require handling MTL files
+    if(reconstruction_method == "ballpivot"):
 
-    #remove any points with density below threshold
-    print("filtering densities...")
-    mask_densities = densities < np.quantile(densities, 0.2)
-    mesh.remove_vertices_by_mask(mask_densities)
+        print("calculating ball pivot reconstruction...")
+
+        nnDist = np.mean(pcd.compute_nearest_neighbor_distance())
+        print(nnDist)
+        #could make the dim relative to the variance/std in each axis
+        dim = 2 * nnDist
+        ball_radius = np.array([dim, dim, dim])
+        ball_radius = o3d.utility.DoubleVector(ball_radius)
+
+        mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(pcd, ball_radius)
+
+
+    #use poisson reconstruction - gives a slightly smoother reconstruction, but as it's probabilistic needs texture mapping
+    #haven't implemented MTL file handling
+    elif(reconstruction_method == "poisson"):
+
+        print("calculating poisson reconstruction...")
+        
+        mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth = 10)
+
+        #remove any points with density below threshold
+        print("filtering densities...")
+        mask_densities = densities < np.quantile(densities, 0.2)
+        mesh.remove_vertices_by_mask(mask_densities)
+
+    #add vertex colors from pcd
+    mesh.vertex_colors = pcd.colors
 
     # pMesh.merge_close_vertices(0.05)
     print("saving mesh...")

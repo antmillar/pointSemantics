@@ -72,18 +72,25 @@ def readPLY(fn):
 
 
 #add two blank columns for input into the model
-def add_blank_cols(vertices):
+def add_blank_cols(vertices : np.array):
     data = np.zeros(shape=[vertices.shape[0], 8])
     data[:,:6] = vertices[:,:6]
     return data
 
 
 #save the numpy data locally
-def save(scene_data):
+def save(scene_data : np.array):
     np.save(dir_data + "/numpy" , scene_data)
 
+#load a point cloud and pass through the model
+def evaluate(input_path : str, fn : str):
 
-def evaluate(fn, scene_data):
+    print("reading input PLY file...")
+    print(input_path + "/" +  fn)
+    scene_data = readPLY(input_path + "/" +  fn)
+    scene_data = add_blank_cols(scene_data)
+
+    print(f"shape : {scene_data.shape}")
 
     print("preparing data...")
     dataset = ScannetDatasetWholeScene(scene_data)
@@ -104,6 +111,7 @@ def evaluate(fn, scene_data):
 
 def forward(model, coords, feats):
     pred = []
+
     coord_chunk, feat_chunk = torch.split(coords.squeeze(0), batch_size, 0), torch.split(feats.squeeze(0),batch_size, 0)
     assert len(coord_chunk) == len(feat_chunk)
     for coord, feat in zip(coord_chunk, feat_chunk):
@@ -140,10 +148,11 @@ def filter_points(coords, pred):
     return np.array(filtered)
 
 
-def predict_label(model, dataloader):
+def predict_label(model, dataloader : DataLoader):
     output_coords, output_pred = [], []
     print("predicting labels...")
     count = 0
+
 
     for data in dataloader:
         # unpack
@@ -161,7 +170,7 @@ def predict_label(model, dataloader):
         output_pred.append(pred)
         count+=1
 
-
+    print(f"count {count}")
     print("filtering points...")
     output_coords = np.concatenate(output_coords, axis=0)
     output_pred = np.concatenate(output_pred, axis=0)
@@ -169,7 +178,7 @@ def predict_label(model, dataloader):
     filtered = filter_points(output_coords, output_pred)
     return filtered
 
-def save_to_PLY(fn, pred):
+def save_to_PLY(fn : str, pred):
 
     #convert pred np array to list of tuples
     points = list(map(tuple, pred))
