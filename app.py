@@ -37,6 +37,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 cwd = os.getcwd()
 output_path = cwd + '/static/img/output'
 input_path = cwd + '/static/models/inputs'
+input_clean_path = cwd + '/static/models/inputs_clean'
 output_path = cwd + '/static/models/outputs'
 mesh_path = cwd + '/static/models/meshes'
 
@@ -75,15 +76,18 @@ def modelViewer():
 
             print(input_path + "/" + fileName)
 
-            #remove outliers from pointcloud
-            preprocess_utils.remove_outliers(input_path, fileName)
+            #remove outliers from pointcloud and save as clean
+            preprocess_utils.remove_outliers(input_path, input_clean_path, fileName)
+            fileName = fileName[:-4] + "_clean" + ".ply"
+
+            #get stats for cleaned pointcloud
+            mean, minmax, variance, volume, ptCount, density = preprocess_utils.get_stats(input_clean_path, fileName)
             
-            #point to new file
-            fileName = "filtered_" + fileName
+            print(f"density : {density}")
+
 
             #load filtered pointcloud, apply the model and save to new ply file
-
-            eval.evaluate(input_path, fileName)
+            eval.evaluate(input_clean_path, fileName, density)
         
         #if the request is from the create mesh button
         elif (request.form.get("fileNameOutput")):

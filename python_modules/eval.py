@@ -44,6 +44,7 @@ labelMap = [
 #read a ply file to vertex np array
 def readPLY(fn):
 
+    print(fn)
     assert(os.path.isfile(fn))
 
     print("reading PLY file...")
@@ -83,7 +84,7 @@ def save(scene_data : np.array):
     np.save(dir_data + "/numpy" , scene_data)
 
 #load a point cloud and pass through the model
-def evaluate(input_path : str, fn : str):
+def evaluate(input_path : str, fn : str, density : float):
 
     print("reading input PLY file...")
     print(input_path + "/" +  fn)
@@ -93,7 +94,7 @@ def evaluate(input_path : str, fn : str):
     print(f"shape : {scene_data.shape}")
 
     print("preparing data...")
-    dataset = ScannetDatasetWholeScene(scene_data)
+    dataset = ScannetDatasetWholeScene(scene_data, density)
     dataloader = DataLoader(dataset, batch_size= batch_size, collate_fn=collate_wholescene)
 
     print("loading model...")
@@ -123,13 +124,19 @@ def forward(model, coords, feats):
 
     return outputs
 
+#remove duplicate points using hashing
 def filter_points(coords, pred):
     assert coords.shape[0] == pred.shape[0]
+    print(f"pre filter point count : {coords.shape[0]}")
 
+    #hash the xyz coords as a string
     coord_hash = [hash(str(coords[point_idx][0]) + str(coords[point_idx][1]) + str(coords[point_idx][2])) for point_idx in range(coords.shape[0])]
+
+    #remove dups
     _, coord_ids = np.unique(np.array(coord_hash), return_index=True)
+
+    #filter
     coord_filtered, pred_filtered = coords[coord_ids], pred[coord_ids]
-    
     
     filtered = []
 
@@ -145,6 +152,7 @@ def filter_points(coords, pred):
             ]
         )
 
+    print(f"filtered point count : {len(filtered)}")
     return np.array(filtered)
 
 
@@ -159,7 +167,7 @@ def predict_label(model, dataloader : DataLoader):
 
         coords, feats, targets, weights, _ = data
         coords, feats, targets, weights = coords.cuda(), feats.cuda(), targets.cuda(), weights.cuda()
-        
+
         # feed
         pred = forward(model, coords, feats)
 
@@ -170,12 +178,12 @@ def predict_label(model, dataloader : DataLoader):
         output_pred.append(pred)
         count+=1
 
-    print(f"count {count}")
     print("filtering points...")
     output_coords = np.concatenate(output_coords, axis=0)
     output_pred = np.concatenate(output_pred, axis=0)
 
     filtered = filter_points(output_coords, output_pred)
+   
     return filtered
 
 def save_to_PLY(fn : str, pred):
@@ -199,10 +207,11 @@ def save_to_PLY(fn : str, pred):
     plyData = PlyElement.describe(points, "vertex")
     plyData = PlyData([plyData])
 
-    #save labelled model
-    output_fn = Path(fn).stem + "LABELLED.ply"
+    #save labelled model 
+    #remove the "_clean"
+    output_fn = Path(fn).stem[:-6] + "_labels.ply"
     plyData.write(os.path.join(dir_output, output_fn))
-    print("saved as " + output_fn )
+    print("saved as " + output_fn)
 
 
 # TODO sort out the prediction part (segmentation)

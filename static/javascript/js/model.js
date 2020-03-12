@@ -2,11 +2,12 @@
 import {OBJLoader2} from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/loaders/OBJLoader2.js';
 import {PLYLoader} from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/loaders/PLYLoader.js';
 import Shaders from './shaders.js'
+import Scene from './scene.js'
 
 export default class Model 
 {
 
-  constructor(name, type)
+  constructor(name)
   {
     this.name = name;
     this.filesInputs = {};
@@ -15,6 +16,15 @@ export default class Model
     this.activeModelInput;
     this.activeModelOutput;
     this.activeModelMesh;
+    this.activeScene;
+    this.scenes = {};
+
+    this.eventLoaded = new Event('loaded');    
+    this.pathInput = "/static/models/inputs/";
+    this.pathLabelled = "/static/models/outputs/";
+    this.pathMesh = "/static/models/meshes/";
+    this.defaultPointSize = 3.0;
+    this.defaultOpacity = 1.0;
 
     this.labelMap =   {
 
@@ -40,57 +50,46 @@ export default class Model
     "[82, 84, 163]":      "otherfurn"
 
     }
-
-    // this.mapping = {
-
-    //  "floor"          :  {"color" : "[152, 223, 138]"	, "index" :  1},
-    //  "wall"           :  {"color" : "[174, 199, 232]" , "index" :  2},
-    //  "cabinet"        :  {"color" : "[31, 119, 180]" , "index" :  3},
-    //  "bed"            :  {"color" : "[255, 187, 120]", "index" :  4},
-    //  "chair"          :  {"color" : "[188, 189, 34]"	, "index" :  5},
-    //  "sofa"           :  {"color" : "[140, 86, 75]"	 , "index" :  6},
-    //  "table"          :  {"color" : "[255, 152, 150]", "index" :  7},
-    //  "door"           :  {"color" : "[214, 39, 40]", "index" :  8},
-    //  "window"         :  {"color" : "[197, 176, 213]", "index" : 9},
-    //  "bookshelf"      :  {"color" : "[148, 103, 189]", "index" :  10},
-    //  "picture"        :  {"color" : "[196, 156, 148]"	, "index" :  11},
-    //  "counter"        :  {"color" : "[23, 190, 207]"	, "index" :  12},
-    //  "desk"           :  {"color" : "[247, 182, 210]", "index" :  13},
-    //  "curtain"        :  {"color" : "[219, 219, 141]"	, "index" :  14},
-    //  "refrigerator"   :  {"color" : "[255, 127, 14]", "index" :  15},
-    //  "bathtub"        :  {"color" : "[227, 119, 194]"	, "index" :  16},
-    //  "shower curtain" :  {"color" : "[158, 218, 229]"	, "index" :  17},
-    //  "toilet"         :  {"color" : "[44, 160, 44]" 	, "index" :  18},
-    //  "sink"           :  {"color" : "[112, 128, 144]"	, "index" :  19},
-    //  "otherfurn"      :  {"color" : "[82, 84, 163]", "index" :  20}
-    // };
     
-    this.eventLoaded = new Event('loaded');
-    this.pathInput = "/static/models/inputs/";
-    this.pathOutput = "/static/models/outputs/";
-    this.pathMesh = "/static/models/meshes/";
-    this.defaultPointSize = 3.0;
-    this.defaultOpacity = 1.0;
+
 
   }
 
-  loadInputs(files)
+  loadScenes(inputFiles, labelFiles, meshFiles)
   {
-    files.forEach((item) => this.loadGeometry(item, this.filesInputs, this.pathInput));
-  }
+    //item is a fn
+    var that = this;
+    inputFiles.forEach(function(item, index){
 
-  loadOutputs(files)
-  {
-    files.forEach((item) => this.loadGeometry(item, this.filesOutputs, this.pathOutput, true));
-  }
+    var scene = new Scene(item);
+    that.scenes[item] = scene;
+    })
 
-  loadMeshes(files)
-  {
-    files.forEach((item) => this.loadGeometry(item, this.filesMeshes, this.pathMesh, true));
+    for (const [name, scene] of Object.entries(that.scenes)) {
+
+      //add files in input directory to scene objet
+      that.loadGeometry(name, scene, that.pathInput, "input");
+
+      //add files in labelled directory to scene object
+      let label_name = name.slice(0, -4) + "_labels.ply"
+      if(labelFiles.includes(label_name))
+        {
+          that.loadGeometry(label_name, scene, that.pathLabelled, "output");
+        }
+
+      //add files in mesh directory to scene object
+      let mesh_name = name.slice(0, -4) + "_labels.obj"
+      if(meshFiles.includes(mesh_name))
+        {
+          that.loadGeometry(mesh_name, scene, that.pathMesh, "mesh");
+        }
+    }
+
+    console.log(that.scenes)
   }
   
-  //load geometry from a path
-  loadGeometry(fn, dest, root, labelled = false)
+  //load geometry from a fn
+  loadGeometry(fn, scene, root, type)
   {
     let extn = fn.substr(fn.lastIndexOf('.') + 1);
 
@@ -100,11 +99,11 @@ export default class Model
     }
     else if(extn.toUpperCase() === "PLY")
     {
-      this.loadPLY(fn, dest, root, labelled);
+      this.loadPLY(fn, scene, root, type);
     }
     else if (extn.toUpperCase() === "OBJ" )
     {
-      this.loadOBJ(fn, dest, root);
+      this.loadOBJ(fn, scene, root);
     }
     else if (extn.toUpperCase() === "MTL" )
     {
@@ -115,19 +114,19 @@ export default class Model
       console.error("Invalid Path Extension");
     }
 
+
   }
 
-  //load PLY file from path
-  loadPLY(path, dest, root, labelled){
+  //load PLY file from fn
+  loadPLY(fn, scene, root, type){
 
     const plyLoader = new PLYLoader();
-    
-    plyLoader.load(root + path, (geometry) => {
 
-    console.log('Loading : ' + root + path);
+    plyLoader.load(root + fn, (geometry) => {
+
+    console.log('Loading : ' + root + fn);
 
     geometry.computeVertexNormals();
-
     //assign point sizes
     let pointSize = new Float32Array( geometry.attributes.position.count);
     pointSize.fill(this.defaultPointSize);
@@ -148,12 +147,13 @@ export default class Model
       // blending: THREE.AdditiveBlending,
       depthTest: false,
       transparent: true,
+
     })
 
 
     //create point cloud
     let pcd = new THREE.Points( geometry, shaderMaterial );
-    pcd.name = path;
+    pcd.name = fn;
     pcd.labels = [];
     pcd.rotation.x = -Math.PI / 2;
 
@@ -185,7 +185,7 @@ export default class Model
     let colorsScaled = colors.array.map(x => x * 255.0);
 
     //if file has labels process these
-    if(labelled){
+    if(type == "output"){
 
 
       //extract color r g b into triplets as strings e.g [""]
@@ -211,24 +211,39 @@ export default class Model
       pcd.toggles = [];
     }
       
+
+
     //add to loaded filesInputs
-    dest[path] = pcd;
+    // dest[fn] = pcd;
     
+
+    if(type == "input")
+    {      
+      scene.inputPLY = pcd;
+    }
+    else if(type == "output")
+    {
+      scene.labelledPLY = pcd;
+    }
+ 
+
+    // this.scenes[fn] = scene;
+
     //dispatch event to say file loaded
     btnLoad.dispatchEvent(this.eventLoaded);
-    console.log(`Loaded : ${path}`);
+    console.log(`Loaded : ${fn}`);
     });
   }
 
 
-    //load OBJ file from path
-    loadOBJ(path, dest, root){
+    //load OBJ file from fn
+    loadOBJ(fn, scene, root){
       {
         const objLoader = new OBJLoader2();
-        console.log('Loading : ' + root + path);
+        console.log('Loading : ' + root + fn);
       
         //need to update this to properly parse the file
-        objLoader.load(root + path, (geometry) => {
+        objLoader.load(root + fn, (geometry) => {
       
           //hacky check for whether geometry in children
 
@@ -239,11 +254,11 @@ export default class Model
 
             object = geometry;
           }
-          object.name = path;
+          object.name = fn;
           var count = object.geometry.attributes.position.count;
           
             let scale = 2;
-            if(path.slice(0,5) == "chair"){
+            if(fn.slice(0,5) == "chair"){
             scale = 0.005
             // object.rotation.x = -Math.PI / 2;
             }
@@ -265,10 +280,10 @@ export default class Model
             // object.position.y = -zMean * scale;
             object.position.z = -yMean * scale;
     
-        const mat = new THREE.MeshPhongMaterial( { shininess: 10 , vertexColors: THREE.VertexColors } ); //color: 0xf1f1f1, 
+        const mat = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, side: THREE.DoubleSide } ); //color: 0xf1f1f1, 
 
         function initColor(parent, mtl) {
-            parent.traverse((o) => {
+        parent.traverse((o) => {
             if (o.isMesh) {
                     o.material = mtl;
             }
@@ -278,10 +293,9 @@ export default class Model
         //assign vertex colors material to model
         initColor(object, mat);
       
-        dest[path] = object;
-      
+        scene.mesh = object;
         //dispatch event to say file loaded
-        console.log(`Loaded : ${path}`);
+        console.log(`Loaded : ${fn}`);
         btnLoad.dispatchEvent(this.eventLoaded);
         });
       }
@@ -290,40 +304,45 @@ export default class Model
       //running the model on input PLY file
       runModel()
       {
+        //if there is an active scene
+        if(this.activeScene)
+        {
 
-        if(this.activeModelInput){
-
-        document.querySelector("#fileNameInput").value = this.activeModelInput.name;
+        document.querySelector("#fileNameInput").value = this.activeScene.name;
         document.querySelector('#btnModel').submit();
         alert("Running Model...");
 
-        } else {
-          alert("Warning : Please select an input PLY file to segment")
+        } 
+        else 
+        {
+          alert("Warning : No Scene Selected")
         }
-        //to implement here
-
-        //check if the input is PLY file
-        //convert the PLY file into a numpy array
-        //pass into the model
-        //save result to a new PLY file
       }
 
 
       createMesh()
       {
         // console.error("not implemented yet")
-        if(this.activeModelOutput){
+        if(this.activeScene){
+          if(this.activeScene.labelledPLY){
 
-          let filters = this.collateFilters();
-          document.querySelector("#filters").value = filters;
-          document.querySelector("#fileNameOutput").value = this.activeModelOutput.name;
+            let filters = this.collateFilters();
+            document.querySelector("#filters").value = filters;
+            document.querySelector("#fileNameOutput").value = this.activeScene.labelledPLY.name;
+            document.querySelector('#btnMesh').submit();
+            alert("Generating Mesh...");
 
-          document.querySelector('#btnMesh').submit();
-          alert("Generating Mesh...");
-
-        } else {
-          alert("Warning : Please select an output PLY file to be meshed")
+          } 
+          else 
+          {
+            alert("Warning : Must Generate a Labelled PLY File first by running the model")
+          }
         }
+        else
+        {
+          alert("Warning : No Scene Selected")
+        }
+        
       }
 
       //generate list of labels to be filtered server side
@@ -332,9 +351,9 @@ export default class Model
         var that = this;
         let labelsToFilter = [];
 
-        Object.keys(that.activeModelOutput.display).forEach(function(item, index)
+        Object.keys(that.activeScene.labelledPLY.display).forEach(function(item, index)
         {
-          if(that.activeModelOutput.display[item] === false)
+          if(that.activeScene.labelledPLY.display[item] === false)
           {
             labelsToFilter.push(item)
           }

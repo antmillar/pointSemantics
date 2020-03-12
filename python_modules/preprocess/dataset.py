@@ -8,11 +8,14 @@ sys.path.append(".")
 
 NUM_CLASSES = 20 
 
-class ScannetDatasetWholeScene():
-    def __init__(self, scene_data, npoints= 8192, is_weighting=True):
-        self.scene_data = scene_data
+#could make the subvol points dependant on memory available
 
-        self.npoints = npoints
+class ScannetDatasetWholeScene():
+    def __init__(self, scene_data, density, max_subvol_points= 8192, is_weighting=True):
+        self.scene_data = scene_data
+        self.density = density #number of pts per m3 in scan
+
+        self.max_subvol_points = max_subvol_points
         self.is_weighting = is_weighting
         self._load_scene_file()
 
@@ -48,9 +51,19 @@ class ScannetDatasetWholeScene():
         ##max coord for each dimension
         coordmax = point_set_ini[:, :3].max(axis=0)
         coordmin = point_set_ini[:, :3].min(axis=0)
+
+        #calculate volume of subvolume 
+        volume = self.max_subvol_points / self.density
+        sideLength = np.ceil(np.sqrt(volume))
+
+        #the issue here is I'm assuming uniform density, clearly the walls and floors have a lot more.
+
         #dims of the subvolume
-        xlength = 5. #1.5
-        ylength = 5. #1.5
+        xlength = sideLength #1.5
+        ylength = sideLength #1.5
+
+        print(f"xLength : {xlength}")
+        print(f"yLength : {ylength}")
 
         #number of subvolumes
         nsubvolume_x = np.ceil((coordmax[0]-coordmin[0])/xlength).astype(np.int32)
@@ -60,8 +73,8 @@ class ScannetDatasetWholeScene():
         semantic_segs = list()
         sample_weights = list()
 
-        print(nsubvolume_x)
-        print(nsubvolume_y)
+        print(f"nsubvolume_x : {nsubvolume_x}")
+        print(f"nsubvolume_y : {nsubvolume_y}")
 
         #loop over subvolumes of size xLength * yLength * height in the scene
         for i in range(nsubvolume_x):
@@ -83,7 +96,7 @@ class ScannetDatasetWholeScene():
 
                 print(len(cur_semantic_seg))
                 #select 8192 random points from the pt indices in the subvolume
-                choice = np.random.choice(len(cur_semantic_seg), self.npoints, replace=True)
+                choice = np.random.choice(len(cur_semantic_seg), self.max_subvol_points, replace=True)
 
                 #get these points from current point set
                 point_set = cur_point_set[choice,:] # Nx3

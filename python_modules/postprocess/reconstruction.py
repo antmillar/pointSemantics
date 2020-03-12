@@ -22,8 +22,8 @@ def save_to_mesh(folder, dest, fn, filters, reconstruction_method = "ballpivot")
         nnDist = np.mean(pcd.compute_nearest_neighbor_distance())
         print(nnDist)
         #could make the dim relative to the variance/std in each axis
-        dim = 2 * nnDist
-        ball_radius = np.array([dim, dim, dim])
+        dim = 3 * nnDist 
+        ball_radius = np.array([dim, dim, dim ])
         ball_radius = o3d.utility.DoubleVector(ball_radius)
 
         mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(pcd, ball_radius)
@@ -35,11 +35,11 @@ def save_to_mesh(folder, dest, fn, filters, reconstruction_method = "ballpivot")
 
         print("calculating poisson reconstruction...")
         
-        mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth = 10)
+        mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth = 8)
 
         #remove any points with density below threshold
         print("filtering densities...")
-        mask_densities = densities < np.quantile(densities, 0.2)
+        mask_densities = densities < np.quantile(densities, 0.1)
         mesh.remove_vertices_by_mask(mask_densities)
 
     #add vertex colors from pcd

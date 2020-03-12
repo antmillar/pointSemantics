@@ -23,170 +23,113 @@ export default class Controller
         runModel: function() {that.model.runModel()},
     };
 
-      //on change of the hidden load button load a file
-      this.btnLoad.addEventListener('change', () => that.model.loadGeometry(btnLoad.filesInputs[0].name));
+    const displayLabels = {display : false};
+    const displayMesh = {display : false};
 
-      //set up the GUI
-      this.gui.add(controls, 'loadFile').name("Load OBJ File");
+    // //on change of the hidden load button load a file 
+    // this.btnLoad.addEventListener('change', () => that.model.loadGeometry(btnLoad.filesInputs[0].name));
 
-      var folder = this.gui.addFolder('Display Settings');
-      //create color picker
-      folder.addColor({modelcolor: 0.00}, 'modelcolor').name('Model Color').onChange((value) => this.changeColor(value));
+    //set up the GUI
+    this.gui.add(controls, 'loadFile').name("Load OBJ File");
 
-      //create model dropdown
-      var folderInputs = folder.addFolder('Input PLY Models');
-      var displayInputs = folderInputs.add({toggleDisplay : true}, 'toggleDisplay');
-      displayInputs.onChange((value) => this.display(value, that.model.activeModelInput));
-      var dropdownInputs = folderInputs.add({fileName : ""}, 'fileName', Object.keys(that.model.filesInputs));
-      var displayOpacity = folderInputs.add({opacity : 0.2}, 'opacity', 0.0, 0.2);
-      displayOpacity.onChange((value) => this.changeOpacity(value));
+    //SCENE FOLDER
+    var folderInputs = this.gui.addFolder('Scenes');
+    var dropdownInputs = folderInputs.add({fileName : ""}, 'fileName', Object.keys(that.model.scenes)).name("File Name");
+    var displayInputs = folderInputs.add({toggleDisplay : true}, 'toggleDisplay').name("Toggle Display");
+    displayInputs.onChange((value) => this.display(value, that.model.activeScene, "input"));
+    var toggleLabels = folderInputs.add(displayLabels, 'display').name("Toggle Labels");; //these get initialised later if scene has labels/mesh to display
+    var toggleMesh = folderInputs.add(displayMesh, 'display').name("Toggle Mesh");;
 
-      //run Model button
-      folderInputs.add(controls, 'runModel').name("Run Model");
+    //DISPLAY FOLDER
+    var folderDisplay = this.gui.addFolder('Display Settings');
+    //create color picker
+    // folder.addColor({modelcolor: 0.00}, 'modelcolor').name('Model Color').onChange((value) => this.changeColor(value));
+    var displayOpacity = folderDisplay.add({opacity : 0.1}, 'opacity', 0.0, 0.2).name("Scene Opacity");
+    displayOpacity.onChange((value) => this.changeOpacity(value));
+    var displayPointSize = folderDisplay.add({pointSize : 3.0}, 'pointSize', 0.0, 20.0).name("Label Point Size");
+    displayPointSize.onChange((value) => this.changePointSize(value));
 
-      //create model dropdown
-      var folderOutputs = folder.addFolder('Output PLY Models');
-      var displayOutputs = folderOutputs.add({toggleDisplay : true}, 'toggleDisplay');
-      displayOutputs.onChange((value) => this.display(value,  that.model.activeModelOutput));
-      var dropdownOutputs = folderOutputs.add({fileName : ""}, 'fileName', Object.keys(that.model.filesOutputs));
-      var displayPointSize = folderOutputs.add({pointSize : 3.0}, 'pointSize', 0.0, 20.0);
-      displayPointSize.onChange((value) => this.changePointSize(value));
-      folderOutputs.add(controls, 'createMesh').name("Create Mesh");
-
-      //create mesh dropdown
-      var folderMeshes = folder.addFolder('Output Meshes');
-      var displayMeshes = folderMeshes.add({toggleDisplay : true}, 'toggleDisplay');
-      displayMeshes.onChange((value) => this.display(value,  that.model.activeModelMesh));
-      var dropdownMeshes = folderMeshes.add({fileName : ""}, 'fileName', Object.keys(that.model.filesMeshes));
- 
-      //create list of labels available
-      var toggle = {};
-
-      folder.open();
-      folderInputs.open();
-      folderOutputs.open();
-      folderMeshes.open();
+    //MODEL FOLDER
+    var folderModel = this.gui.addFolder('Segmentation');
+    folderModel.add(controls, 'runModel').name("Run Model");
+    
+    //MESH FOLDER
+    var folderMesh = this.gui.addFolder('Mesh Reconstruction');
+    folderMesh.add(controls, 'createMesh').name("Create Mesh");
 
 
-      //input file dropdown
-      //when file is loaded update the dropdown list
-      this.btnLoad.addEventListener('loaded', function (e) {
+    //OPEN FOLDERS
+    folderInputs.open();
+    folderDisplay.open();
+    folderModel.open();
+    folderMesh.open();
 
-        dropdownInputs = dropdownInputs.options(Object.keys(that.model.filesInputs))
-        dropdownInputs.name('File Name');
-        dropdownInputs.onChange(function(value) {
-               
-          //if active input model present, remove it
-          if(that.model.activeModelInput)
+
+    //input file dropdown
+    //when file is loaded update the dropdown list
+    this.btnLoad.addEventListener('loaded', function (e) {
+
+      dropdownInputs = dropdownInputs.options(Object.keys(that.model.scenes))
+      dropdownInputs.name('File Name');
+      dropdownInputs.onChange(function(value) {
+              
+        //if active input model present, remove it
+        if(that.model.activeScene)
+        {
+          if(that.model.activeScene.inputPLY) that.view.scene.remove(that.model.activeScene.inputPLY);
+          if(that.model.activeScene.labelledPLY) that.view.scene.remove(that.model.activeScene.labelledPLY);
+          if(that.model.activeScene.mesh) that.view.scene.remove(that.model.activeScene.mesh);
+        }
+
+        that.model.activeScene = that.model.scenes[value];
+
+        that.gui.removeFolder("Toggle Labels");
+
+        that.view.scene.add(that.model.activeScene.inputPLY);
+        //if has labels create toggle
+        if(that.model.activeScene.labelledPLY)
+        {
+          try
           {
-            that.view.scene.remove( that.model.activeModelInput);
-          }
+            folderInputs.remove(toggleLabels)
+          } catch{}
 
-          that.model.activeModelInput = that.model.filesInputs[value];
-
-          folder.removeFolder("Toggle Labels");
-
-          that.view.scene.add(that.model.activeModelInput);
-
-          console.log(that.model.activeModelInput)
-      });
-
-      //output file dropdown
-      dropdownOutputs = dropdownOutputs.options(Object.keys(that.model.filesOutputs))
-      dropdownOutputs.name('File Name');
-      dropdownOutputs.onChange(function(value) {
-             
-        //if active model present, remove it
-        if(that.model.activeModelOutput)
+          toggleLabels = folderInputs.add(displayLabels, 'display').name("Toggle Labels");
+          toggleLabels.onChange((value) => that.display(value, that.model.activeScene, "labels"));
+        }
+        else 
         {
-          that.view.scene.remove( that.model.activeModelOutput);
+          folderInputs.remove(toggleLabels)
         }
 
-        that.model.activeModelOutput = that.model.filesOutputs[value];
-        let activeLabelCount = that.model.activeModelOutput.labels.length 
-
-        folder.removeFolder("Toggle Labels");
-
-        if(activeLabelCount> 0)
+        //if has mesh create toggle
+        if(that.model.activeScene.mesh)
         {
-        //refresh the contents of the labels folder                 
-
-          folderOutputs = folder.addFolder("Toggle Labels");
-          folderOutputs.open()
-          // toggle = {};
+          try
+          {
+            folderInputs.remove(toggleMesh)
+          } catch{}
+          toggleMesh = folderInputs.add(displayMesh, 'display').name("Toggle Mesh");
+          toggleMesh.onChange((value) => that.display(value, that.model.activeScene, "mesh"));
         }
-
-        // for(var i = 0; i< activeLabelCount; i++){
-
-        //   let key = objToString(that.model.activeModelOutput.labels[i])
-        //   toggle[that.model.labelMap[key]] = true;
-        // }
-
-        that.model.activeModelOutput.toggles = toggle;
-
-        for(const key of Object.keys(that.model.activeModelOutput.display)){
-          folderOutputs.add(that.model.activeModelOutput.display, key).onChange((bool) => that.toggleDisplay(bool, key));;
-        }
-
-        that.view.scene.add(that.model.activeModelOutput);
-
-        console.log(that.model.activeModelOutput)
-    });
-
-
-      //output mesh dropdown
-      dropdownMeshes = dropdownMeshes.options(Object.keys(that.model.filesMeshes))
-      dropdownMeshes.name('File Name');
-      dropdownMeshes.onChange(function(value) {
-             
-        //if active model present, remove it
-        if(that.model.activeModelMesh)
+        else 
         {
-          that.view.scene.remove( that.model.activeModelMesh);
+          folderInputs.remove(toggleMesh)
         }
 
-        that.model.activeModelMesh = that.model.filesMeshes[value];
-        // let activeLabelCount = that.model.activeModelMesh.labels.length 
-
-        // folder.removeFolder("Toggle Labels");
-
-        // if(activeLabelCount> 0)
-        // {
-        // //refresh the contents of the labels folder                 
-
-        //   folderMeshes = folder.addFolder("Toggle Labels");
-        //   folderMeshes.open()
-        //   toggle = {};
-        // }
-
-        // for(var i = 0; i< activeLabelCount; i++){
-
-        //   let key = objToString(that.model.activeModelMesh.labels[i])
-        //   toggle[that.model.labelMap[key]] = true;
-        // }
-
-        // that.model.activeModelMesh.toggles = toggle;
-
-        // for(const key of Object.keys(toggle)){
-        //   folderMeshes.add(toggle, key).onChange((bool) => that.toggleDisplay(bool, key));;
-        // }
-
-        that.view.scene.add(that.model.activeModelMesh);
-
-        console.log(that.model.activeModelMesh)
-    });
-      
-      }, false);
-  }
+        console.log(that.model.activeScene.inputPLY)
+    }); 
+  }, false);
+}
 
   //change the color of the active objet
   changeColor(value)
   {
     console.log("Changing Color of Active Model");
 
-    if(this.model.activeModelInput){
+    if(this.model.activeScene){
 
-      var colors = this.model.activeModelInput.geometry.attributes.color;
+      var colors = this.model.activeScene.inputPLY.geometry.attributes.color;
 
       //loop over the color attributes
       for ( var i = 0; i < colors.count; i ++ ) {
@@ -202,13 +145,13 @@ export default class Controller
   toggleDisplay(bool, label)
   {
 
-    if(this.model.activeModelOutput){
+    if(this.model.activeScene.labelledPLY){
 
-      this.model.activeModelOutput.display[label] = bool;
+      this.model.activeScene.labelledPLY.display[label] = bool;
 
-      var colors = this.model.activeModelOutput.geometry.attributes.color;
-      var pointSize = this.model.activeModelOutput.geometry.attributes.pointSize;
-      var opacity  = this.model.activeModelOutput.geometry.attributes.opacity;
+      var colors = this.model.activeScene.labelledPLY.geometry.attributes.color;
+      var pointSize = this.model.activeScene.labelledPLY.geometry.attributes.pointSize;
+      var opacity  = this.model.activeScene.labelledPLY.geometry.attributes.opacity;
       
       colors.needsUpdate = true;
       pointSize.needsUpdate = true;
@@ -225,7 +168,7 @@ export default class Controller
       //loop over the color attributes
       for ( var i = 0; i < colors.count; i ++ ) {
 
-        if(this.model.activeModelOutput.labelledPoints[i] === label)
+        if(this.model.activeScene.labelledPLY.labelledPoints[i] === label)
         {
           if(bool){
             pointSize.setX(i, this.model.defaultPointSize);
@@ -238,19 +181,19 @@ export default class Controller
       }
     }
 
-    this.model.activeModelOutput.toggles[label] = bool;
-    console.log(this.model.activeModelOutput)
+    this.model.activeScene.labelledPLY.toggles[label] = bool;
+    console.log(this.model.activeScene.labelledPLY)
   }
 
   changePointSize(pointSize)
   {
-    if(this.model.activeModelOutput){
+    if(this.model.activeScene.labelledPLY){
 
-      var attrPointSize = this.model.activeModelOutput.geometry.attributes.pointSize;
+      var attrPointSize = this.model.activeScene.labelledPLY.geometry.attributes.pointSize;
       this.model.defaultPointSize = pointSize;
       attrPointSize.needsUpdate = true;
 
-      if(this.model.activeModelOutput.labels.length > 0) {
+      if(this.model.activeScene.labelledPLY.labels.length > 0) {
       //loop over the color attributes
         for ( var i = 0; i < attrPointSize.count; i ++ ) {
 
@@ -264,18 +207,15 @@ export default class Controller
     }
   }
 
-
-
   changeOpacity(opacity)
   {
-    if(this.model.activeModelInput){
+    if(this.model.activeScene){
 
   
-      var attrOpacity = this.model.activeModelInput.geometry.attributes.opacity;
+      var attrOpacity = this.model.activeScene.inputPLY.geometry.attributes.opacity;
       this.model.defaultOpacity = opacity;
       attrOpacity.needsUpdate = true;
       
-
       //loop pts
         for ( var i = 0; i < attrOpacity.count; i ++ ) {
 
@@ -285,19 +225,49 @@ export default class Controller
       
     }
   }
-
-  //need to fix case where model is changed and unticked
-  display(value, activeModel)
+    
+    //need to fix case where model is changed and unticked
+  display(value, activeModel, type)
   {
-    if(value)
+    if(activeModel)
     {
-      this.view.scene.add( activeModel);
-    }
-    else
-    {
-      this.view.scene.remove( activeModel);
+      if(value)
+      {
+        if(type == "input")
+        {
+          this.view.scene.add( activeModel.inputPLY);
+          console.log("input")
+        }
+        else if(type == "labels")
+        {
+          this.view.scene.add( activeModel.labelledPLY);
+          console.log("lablled")
+        }
+        else if(type == "mesh")
+        {
+          this.view.scene.add( activeModel.mesh);
+        }
+      }
+      else
+      {
+        if(type == "input")
+        {
+          this.view.scene.remove( activeModel.inputPLY);
+        }
+        else if(type == "labels")
+        {
+          this.view.scene.remove( activeModel.labelledPLY);
+        }
+        else if(type == "mesh")
+        {
+          this.view.scene.remove( activeModel.mesh);
+        }
+      }
     }
   }
+
+
+
   
   }
   function objToString(obj)

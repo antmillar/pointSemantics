@@ -3,12 +3,10 @@ import os
 import open3d as o3d
 import numpy as np
 
-directory = '/home/anthony/repos/Datasets/ScanNet/scans'
-
-#loop over all the scan directories and calculates the statistics
-
+#loop over all the scan directories and calculates the statistics for the SCANNET dataset
 def get_scannet_stats():
 
+    directory = '/home/anthony/repos/Datasets/ScanNet/scans'
     subfolderList = [item[2] for item in os.walk(directory)]
     files = [file for subFiles in subfolderList for file in subFiles]
     mean = np.zeros([1,3])
@@ -88,7 +86,7 @@ def normalize_point_cloud(path : str):
     print("saved to : " + outputFileName)
 
 
-def remove_outliers(root : str, fn : str):
+def remove_outliers(root : str, dest: str, fn : str):
     
     pcd = o3d.io.read_point_cloud(root + "/" + fn)
     nnDist = np.mean(pcd.compute_nearest_neighbor_distance())
@@ -99,5 +97,24 @@ def remove_outliers(root : str, fn : str):
     print(f"after radius outliers removed : {len(pcd.points)}")
 
     #save filtered pcd
-    o3d.io.write_point_cloud(root + "/" + "filtered_" + fn, pcd)
+    print(root + "/" + fn[:-4] + "_clean" + ".ply")
+    o3d.io.write_point_cloud(dest + "/" + fn[:-4] + "_clean" + ".ply", pcd)
     # getstats(filtered)
+
+#calculate the geometric statistics for a pointcloud
+def get_stats(root : str, fn : str):
+    
+    fileName = os.path.join(root, fn)
+    assert(os.path.isfile(fileName))
+
+    pcd = o3d.io.read_point_cloud(fileName)
+
+    pts =  pcd.points
+    mean = stats.describe(np.asarray(pts)).mean
+    minmax = stats.describe(np.asarray(pts)).minmax
+    variance = stats.describe(np.asarray(pts)).variance
+    volume = pcd.get_axis_aligned_bounding_box().volume()
+    ptCount = len(pts)
+    density = ptCount / volume
+
+    return mean, minmax, variance, volume, ptCount, density
