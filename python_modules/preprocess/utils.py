@@ -66,8 +66,8 @@ def subsample(pcd, voxel_size):
     else:
         return pcd
 
-#remove outliers and normalize
-def standardise(root : str, dest: str, fn : str):
+
+def down_sample(root : str, fn : str, glob : str):
 
     #load cloud
     pcd = o3d.io.read_point_cloud(root + "/" + fn)
@@ -76,11 +76,18 @@ def standardise(root : str, dest: str, fn : str):
     mean, minmax, variance, volume, ptCount, density = get_stats(root, fn)
 
     print("beginning subsampling...")
+
     print(ptCount, density)
 
     #if the cloud is too density or large subsample it down
     voxel_start = 0.0
     pcd = subsample(pcd, voxel_start)
+
+
+    return pcd
+
+#remove outliers and normalize
+def standardise(pcd, fn, dest):
 
     #removing outliers
     nnDist = np.mean(pcd.compute_nearest_neighbor_distance())
@@ -95,7 +102,7 @@ def standardise(root : str, dest: str, fn : str):
     pcd = normalize_point_cloud(pcd)
 
     #save filtered pcd
-    print(root + "/" + fn[:-4] + "_clean" + ".ply")
+
     o3d.io.write_point_cloud(dest + "/" + fn[:-4] + "_clean" + ".ply", pcd)
     # getstats(filtered)
 

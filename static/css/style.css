@@ -66,6 +66,16 @@ canvas[resize] {
 }
 
 
+#status {
+  font-size : 0.85em;
+  top: 20px;
+  left: 85%;
+  text-align : left;
+  position: fixed;
+  z-index: 3000;
+}
+
+
 /* remove firefox ugly outline */
 
 a:focus { 

@@ -305,26 +305,27 @@ export default class Model
   //tells python to locally copy the file to input directory
   copyFile()
   {
-    
+
     let fileToLoad = document.querySelector('#btnLoad').files[0].name;
     document.querySelector("#fileNameLoad").value = fileToLoad;
     console.log(document.querySelector('#btnLoad').files[0].name);
-    document.querySelector('#copyFiles').submit();
-
-    alert("Preprocessing File...");
+    document.querySelector('#copyFiles').submit()
 
   }
+
 
   //running the model on input PLY file
   runModel()
   {
+
+
     //if there is an active scene
     if(this.activeScene)
     {
 
     document.querySelector("#fileNameInput").value = this.activeScene.name;
     document.querySelector('#btnModel').submit();
-    alert("Running Model...");
+ 
 
     } 
     else 
@@ -341,11 +342,11 @@ export default class Model
     if(this.activeScene){
       if(this.activeScene.labelledPLY){
 
+
         let filters = this.collateFilters();
         document.querySelector("#filters").value = filters;
         document.querySelector("#fileNameOutput").value = this.activeScene.name;
         document.querySelector('#btnMesh').submit();
-        alert("Generating Mesh...");
 
       } 
       else 
