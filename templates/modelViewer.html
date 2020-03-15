@@ -31,8 +31,13 @@
 
 </body>
 
-<!-- this listens for load events -->
 <input id = "btnLoad" type = "file" style = "visibility: hidden;">
+
+
+<!-- this listens for load events -->
+<form action="" method="POST" id = "copyFiles">
+    <input type="hidden" id = "fileNameLoad" name = "fileNameLoad">
+</form>
 
 <!-- this passes filenames to the model -->
 <form action="" method="POST" id = "btnModel">

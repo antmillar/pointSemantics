@@ -58,7 +58,7 @@ canvas[resize] {
 }
 
 #hoverLabel {
-  font-size : 0.75em;
+  font-size : 1.5em;
   bottom: 200px;
   left: 20px;
   position: fixed;

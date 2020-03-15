@@ -36,6 +36,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 cwd = os.getcwd()
 output_path = cwd + '/static/img/output'
+load_path = cwd + '/static/models/load'
 input_path = cwd + '/static/models/inputs'
 input_clean_path = cwd + '/static/models/inputs_clean'
 output_path = cwd + '/static/models/outputs'
@@ -67,8 +68,18 @@ def modelViewer():
 
     if request.method == "POST":
 
+        if(request.form.get("fileNameLoad")):
+
+            fileToCopy = request.form.get("fileNameLoad")
+
+            print(load_path + "/" + fileToCopy)
+
+            preprocess_utils.standardise(load_path, input_path, fileToCopy)
+
+
+
         #if the request is from the run model button
-        if(request.form.get("fileNameInput")):
+        elif(request.form.get("fileNameInput")):
         
             fileName = request.form.get("fileNameInput")
 
@@ -76,18 +87,13 @@ def modelViewer():
 
             print(input_path + "/" + fileName)
 
-            #remove outliers from pointcloud and save as clean
-            preprocess_utils.remove_outliers(input_path, input_clean_path, fileName)
-            fileName = fileName[:-4] + "_clean" + ".ply"
-
             #get stats for cleaned pointcloud
-            mean, minmax, variance, volume, ptCount, density = preprocess_utils.get_stats(input_clean_path, fileName)
+            mean, minmax, variance, volume, ptCount, density = preprocess_utils.get_stats(input_path, fileName)
             
             print(f"density : {density}")
 
-
             #load filtered pointcloud, apply the model and save to new ply file
-            eval.evaluate(input_clean_path, fileName, density)
+            eval.evaluate(input_path, fileName, density)
         
         #if the request is from the create mesh button
         elif (request.form.get("fileNameOutput")):

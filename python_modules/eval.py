@@ -209,7 +209,6 @@ def save_to_PLY(fn : str, pred):
     plyData = PlyData([plyData])
 
     #save labelled model 
-    #remove the "_clean"
-    output_fn = Path(fn).stem[:-6] + "_labels.ply"
+    output_fn = Path(fn).stem + "_labels.ply"
     plyData.write(os.path.join(dir_output, output_fn))
     print("saved as " + output_fn)

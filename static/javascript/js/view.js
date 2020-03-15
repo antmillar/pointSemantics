@@ -85,7 +85,7 @@ export default class View
           }
         else
         {
-          document.querySelector("#hoverLabel").innerHTML = "Point Label - N/A"
+          document.querySelector("#hoverLabel").innerHTML = "Point Label - "
         }
         }        
       }   

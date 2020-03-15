@@ -20,7 +20,7 @@ export default class Controller
     var UI = this.UI;
 
     const controls = {
-      loadFile: function() {document.querySelector('#btnLoad').click();},
+      loadFile: function() {that.btnLoad.click()},
       createMesh : function() {that.model.createMesh()},
       runModel: function() {that.model.runModel()},
     };
@@ -30,7 +30,7 @@ export default class Controller
     UI.displayMesh = {display : false};
 
     // //on change of the hidden load button load a file 
-    // this.btnLoad.addEventListener('change', () => that.model.loadGeometry(btnLoad.filesInputs[0].name));
+    this.btnLoad.addEventListener('change', () => that.model.copyFile());
 
     //set up the GUI
     this.gui.add(controls, 'loadFile').name("Load OBJ File");

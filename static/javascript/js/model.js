@@ -46,6 +46,7 @@ export default class Model
     }
   }
 
+
   //load the data from folders into scenes
   loadScenes(inputFiles, labelFiles, meshFiles)
   {
@@ -300,6 +301,19 @@ export default class Model
       });
     }
     }
+
+  //tells python to locally copy the file to input directory
+  copyFile()
+  {
+    
+    let fileToLoad = document.querySelector('#btnLoad').files[0].name;
+    document.querySelector("#fileNameLoad").value = fileToLoad;
+    console.log(document.querySelector('#btnLoad').files[0].name);
+    document.querySelector('#copyFiles').submit();
+
+    alert("Preprocessing File...");
+
+  }
 
   //running the model on input PLY file
   runModel()
