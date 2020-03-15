@@ -45,10 +45,10 @@ SCANNET_DENSITY = 2000 #average pts per m3
 root_path = "/home/anthony/Downloads/"
 
 
-def normalize_point_cloud(path : str):
+def normalize_point_cloud(pcd):
 
-    print(root_path + path)
-    pcd = o3d.io.read_point_cloud(root_path + path)
+    # print(root_path + path)
+    # pcd = o3d.io.read_point_cloud(root_path + path)
     pcd_pts = np.asarray(pcd.points)
 
     print("info : " + str(pcd))
@@ -62,8 +62,8 @@ def normalize_point_cloud(path : str):
 
     normalisedPts = np.zeros(pcd_pts.shape)
     #place the model on the plane, not really "normalising" here, more just translating 
-    normalisedPts[:,0] = ((pcd_pts[:,0] - xMin))
-    normalisedPts[:,1] = ((pcd_pts[:,1] - yMin))
+    normalisedPts[:,0] = ((pcd_pts[:,0]))# - xMin))
+    normalisedPts[:,1] = ((pcd_pts[:,1])) #- yMin))
     normalisedPts[:,2] = ((pcd_pts[:,2] - zMin))
 
     print(stats.describe(normalisedPts))
@@ -71,19 +71,21 @@ def normalize_point_cloud(path : str):
     newPLY = o3d.geometry.PointCloud(pcd)
     newPLY.points = o3d.utility.Vector3dVector(normalisedPts)
 
-    cols = np.asarray(newPLY.colors)
-    pts = np.asarray(newPLY.points)
+    return newPLY
 
-    arrays = (pts, cols)
-    npydata = np.concatenate(arrays, axis = 1)
-    extracols = np.zeros((cols.shape[0], 2))
+    # cols = np.asarray(newPLY.colors)
+    # pts = np.asarray(newPLY.points)
 
-    data = np.c_[npydata, extracols]
+    # arrays = (pts, cols)
+    # npydata = np.concatenate(arrays, axis = 1)
+    # extracols = np.zeros((cols.shape[0], 2))
 
-    outputFileName = root_path + path[:-4] + "NORM.npy"
+    # data = np.c_[npydata, extracols]
 
-    np.save(outputFileName, data)
-    print("saved to : " + outputFileName)
+    # outputFileName = root_path + path[:-4] + "NORM.npy"
+
+    # np.save(outputFileName, data)
+    # print("saved to : " + outputFileName)
 
 
 def remove_outliers(root : str, dest: str, fn : str):
@@ -95,6 +97,9 @@ def remove_outliers(root : str, dest: str, fn : str):
     print(f"after statistical outliers removed : {len(pcd.points)}")
     pcd, _ = pcd.remove_radius_outlier(nb_points=2, radius=nnDist * 2.5)
     print(f"after radius outliers removed : {len(pcd.points)}")
+
+    #normalizing
+    # pcd = normalize_point_cloud(pcd)
 
     #save filtered pcd
     print(root + "/" + fn[:-4] + "_clean" + ".ply")

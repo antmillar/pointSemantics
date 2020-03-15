@@ -100,6 +100,7 @@ def evaluate(input_path : str, fn : str, density : float):
     print("loading model...")
     model_path = os.path.join(dir_model, "model.pth")
     model = pointnet2_semseg.get_model(num_classes=20, is_msg = False).cuda()
+    print(model)
     model.load_state_dict(torch.load(model_path))
     model.eval()
     
@@ -124,7 +125,7 @@ def forward(model, coords, feats):
 
     return outputs
 
-#remove duplicate points using hashing
+#remove points duplicated in the dataset random sampling
 def filter_points(coords, pred):
     assert coords.shape[0] == pred.shape[0]
     print(f"pre filter point count : {coords.shape[0]}")
@@ -212,30 +213,3 @@ def save_to_PLY(fn : str, pred):
     output_fn = Path(fn).stem[:-6] + "_labels.ply"
     plyData.write(os.path.join(dir_output, output_fn))
     print("saved as " + output_fn)
-
-
-# TODO sort out the prediction part (segmentation)
-# TODO how to deal with overly large point clouds?
-# TODO how to convert to mesh??
-# TODO add toggle attribute to the geometry to indicate whether the label is activated or not
-# TODO fix problem when the size is set to zero and use activated parameter instead
-# TODO show the output if present else not, and have two toggles
-# TODO put the shader in it's own script
-
-# things to figure out: how to downsample mesh beforehand?? check npy file sizes 
-# how to compute the subvolume size to prevent overflow
-# how to convert the pcd to mesh
-
-#scenes have 120k ish points
-#my scans have 1mio ish points
-#npy files have?? more points and they are splits?! 150-200k in the parts...??
-# figure out what the preprocessing is doing??
-
-# update the output files once model has been  added
-# stop submit of post request on refresh 
-# manually loading the OBJ File doesn't allow me to use pointsize
-
-# add mesh conversion
-# add mesh gui
-
-# update output/mesh list on model

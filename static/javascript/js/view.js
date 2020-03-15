@@ -2,13 +2,15 @@ import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/t
 
 export default class View
 {
-    constructor()
+    constructor(mouse)
     {
-
         this.canvas = document.querySelector('#c');
         this.renderer = new THREE.WebGLRenderer({canvas : this.canvas});
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = mouse;
         this.populate();
     }
+    
 
     populate(){
 
@@ -49,6 +51,7 @@ export default class View
       
     }
 
+
     //check whether canvas width matches client
     resizeToClient(renderer) {
 
@@ -59,10 +62,39 @@ export default class View
 
       return mismatch;
     }
+
+    raycastPoints(){
+      //raycasting to identify point category
+      this.raycaster.setFromCamera( this.mouse, this.camera );
+      this.raycaster.params.Points.threshold = 0.1;
+
+      let intersectPt;
+
+      let sceneChildren = this.scene.children;
+
+      //loop over scene children to find if there's a labelled point cloud
+      for (var i = 0; i < sceneChildren.length; i++) {
+
+        if (sceneChildren[i].name == "labelledPLY") {
+
+          //if pointing at something get first item
+          if(this.raycaster.intersectObject(sceneChildren[i])[0]){
+
+            intersectPt = this.raycaster.intersectObject(sceneChildren[i])[0].index;
+            document.querySelector("#hoverLabel").innerHTML = "Point Label - " + sceneChildren[i].labelledPoints[intersectPt]
+          }
+        else
+        {
+          document.querySelector("#hoverLabel").innerHTML = "Point Label - N/A"
+        }
+        }        
+      }   
+    }
   
     //render the view
     render() {
         
+      //resizing settings
       if (this.resizeToClient(this.renderer)) {
 
         const canvas = this.renderer.domElement;
@@ -71,7 +103,8 @@ export default class View
         this.camera.updateProjectionMatrix();
 
       }
-      
+
+      this.raycastPoints();      
       this.renderer.render(this.scene, this.camera);
   
       requestAnimationFrame(() => this.render());

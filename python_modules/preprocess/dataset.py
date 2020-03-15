@@ -54,7 +54,7 @@ class ScannetDatasetWholeScene():
 
         #calculate volume of subvolume 
         volume = self.max_subvol_points / self.density
-        sideLength = np.ceil(np.sqrt(volume))
+        sideLength = np.ceil(np.sqrt(volume)) 
 
         #the issue here is I'm assuming uniform density, clearly the walls and floors have a lot more.
 

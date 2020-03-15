@@ -8,3 +8,8 @@ export default class Scene
         this.mesh;
     }
 }
+
+// 
+// # TODO how to deal with overly large point clouds?
+// # TODO add partial meshes?
+// # TODO metadata for PCD

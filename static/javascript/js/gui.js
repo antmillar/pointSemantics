@@ -9,69 +9,80 @@ export default class Controller
     this.btnLoad = document.querySelector("#btnLoad");
     this.btnMesh = document.querySelector('#btnMesh');
     this.btnModel = document.querySelector("#btnModel");
-    this.initialise();
+    this.sceneData = document.querySelector("#metadata");
+    this.UI = {};
+    this.setupUI();
   }
 
-  initialise()
+  setupUI()
   {
     var that = this;
+    var UI = this.UI;
 
-    //when load gui button is clicked, simulates a click of the hidden load button 
     const controls = {
-        loadFile: function() {document.querySelector('#btnLoad').click();},
-        createMesh : function() {that.model.createMesh()},
-        runModel: function() {that.model.runModel()},
+      loadFile: function() {document.querySelector('#btnLoad').click();},
+      createMesh : function() {that.model.createMesh()},
+      runModel: function() {that.model.runModel()},
     };
 
-    const displayLabels = {display : false};
-    const displayMesh = {display : false};
+    UI.displayInput = {display: false};
+    UI.displayLabel = {display : false};
+    UI.displayMesh = {display : false};
 
     // //on change of the hidden load button load a file 
     // this.btnLoad.addEventListener('change', () => that.model.loadGeometry(btnLoad.filesInputs[0].name));
 
     //set up the GUI
     this.gui.add(controls, 'loadFile').name("Load OBJ File");
-
+    
     //SCENE FOLDER
-    var folderInputs = this.gui.addFolder('Scenes');
-    var dropdownInputs = folderInputs.add({fileName : ""}, 'fileName', Object.keys(that.model.scenes)).name("File Name");
-    var displayInputs = folderInputs.add({toggleDisplay : true}, 'toggleDisplay').name("Toggle Display");
-    displayInputs.onChange((value) => this.display(value, that.model.activeScene, "input"));
-    var toggleLabels = folderInputs.add(displayLabels, 'display').name("Toggle Labels");; //these get initialised later if scene has labels/mesh to display
-    var toggleMesh = folderInputs.add(displayMesh, 'display').name("Toggle Mesh");;
-
-    //DISPLAY FOLDER
-    var folderDisplay = this.gui.addFolder('Display Settings');
+    UI.folderInputs = this.gui.addFolder('Scenes');
+    UI.dropdownInputs = UI.folderInputs.add({fileName : ""}, 'fileName', Object.keys(that.model.scenes)).name("File Name");
+    UI.toggleInputs = UI.folderInputs.add(UI.displayInput, 'display').name("Show Scene");
+    UI.toggleInputs.onChange((value) => this.displayModel(value, that.model.activeScene, "input"));
+    UI.toggleLabels = UI.folderInputs.add(UI.displayLabel, 'display').name("Show Labels");
+    UI.toggleMesh = UI.folderInputs.add(UI.displayMesh, 'display').name("Show Mesh");;
+    // DISPLAY FOLDER
+    UI.folderDisplay = this.gui.addFolder('Display Settings');
     //create color picker
-    // folder.addColor({modelcolor: 0.00}, 'modelcolor').name('Model Color').onChange((value) => this.changeColor(value));
-    var displayOpacity = folderDisplay.add({opacity : 0.1}, 'opacity', 0.0, 0.2).name("Scene Opacity");
-    displayOpacity.onChange((value) => this.changeOpacity(value));
-    var displayPointSize = folderDisplay.add({pointSize : 3.0}, 'pointSize', 0.0, 20.0).name("Label Point Size");
-    displayPointSize.onChange((value) => this.changePointSize(value));
+    // folder.addColor({modelcolor: 0.00}, 'modelcolor').name('Model Color').onChange((value) => this.updateColor(value));
+    UI.displayOpacity = UI.folderDisplay.add({opacity : 0.1}, 'opacity', 0.0, 0.2).name("Scene Opacity");
+    UI.displayOpacity.onChange((value) => this.updateOpacity(value));
+    UI.displayPointSize = UI.folderDisplay.add({pointSize : 2.0}, 'pointSize', 0.0, 20.0).name("Labels Point Size");
+    UI.displayPointSize.onChange((value) => this.updatePointSize(value));
 
     //MODEL FOLDER
-    var folderModel = this.gui.addFolder('Segmentation');
-    folderModel.add(controls, 'runModel').name("Run Model");
+    UI.folderModel = this.gui.addFolder('Segmentation');
+    UI.folderModel.add(controls, 'runModel').name("Run Model");
     
     //MESH FOLDER
-    var folderMesh = this.gui.addFolder('Mesh Reconstruction');
-    folderMesh.add(controls, 'createMesh').name("Create Mesh");
+    UI.folderMesh = this.gui.addFolder('Mesh Reconstruction');
+    UI.folderMesh.add(controls, 'createMesh').name("Create Mesh");
 
-
+    //LABELS FOLDER
+    UI.folderLabels;
+    
     //OPEN FOLDERS
-    folderInputs.open();
-    folderDisplay.open();
-    folderModel.open();
-    folderMesh.open();
+    UI.folderInputs.open();
+    UI.folderDisplay.open();
+    UI.folderModel.open();
+    UI.folderMesh.open();
 
+    this.listen();
+  }
 
-    //input file dropdown
-    //when file is loaded update the dropdown list
+  listen()
+  {
+    var that = this;
+    var UI = this.UI;
+
+    //when loaded event sent update the dropdown list
     this.btnLoad.addEventListener('loaded', function (e) {
 
-      dropdownInputs = dropdownInputs.options(Object.keys(that.model.scenes))
-      dropdownInputs.name('File Name');
-      dropdownInputs.onChange(function(value) {
+      UI.dropdownInputs = UI.dropdownInputs.options(Object.keys(that.model.scenes))
+      UI.dropdownInputs.name('File Name');
+      //whenever dropdown is updated update the UI as follows...
+      UI.dropdownInputs.onChange(function(value) {
               
         //if active input model present, remove it
         if(that.model.activeScene)
@@ -81,49 +92,76 @@ export default class Controller
           if(that.model.activeScene.mesh) that.view.scene.remove(that.model.activeScene.mesh);
         }
 
+        //specify new active scene
         that.model.activeScene = that.model.scenes[value];
-
-        that.gui.removeFolder("Toggle Labels");
-
         that.view.scene.add(that.model.activeScene.inputPLY);
-        //if has labels create toggle
-        if(that.model.activeScene.labelledPLY)
-        {
-          try
-          {
-            folderInputs.remove(toggleLabels)
-          } catch{}
 
-          toggleLabels = folderInputs.add(displayLabels, 'display').name("Toggle Labels");
-          toggleLabels.onChange((value) => that.display(value, that.model.activeScene, "labels"));
-        }
-        else 
-        {
-          folderInputs.remove(toggleLabels)
-        }
+        //reset display booleans
+        UI.displayInput.display = true;
+        UI.displayLabel.display = false;
+        UI.displayMesh.display = false;
 
-        //if has mesh create toggle
-        if(that.model.activeScene.mesh)
-        {
-          try
-          {
-            folderInputs.remove(toggleMesh)
-          } catch{}
-          toggleMesh = folderInputs.add(displayMesh, 'display').name("Toggle Mesh");
-          toggleMesh.onChange((value) => that.display(value, that.model.activeScene, "mesh"));
-        }
-        else 
-        {
-          folderInputs.remove(toggleMesh)
-        }
+        //add display toggles
+        that.updateTogglesDisplay();
 
-        console.log(that.model.activeScene.inputPLY)
+        //display the label filters if available
+        that.updateTogglesLabels();
+
+        //display the point size controller if available
+        that.updateTogglesPointSize();
+
+        // //update the metadata for the scene
+        that.updateSceneData();
+
+
+
     }); 
   }, false);
 }
 
+    //need to fix case where model is changed and unticked
+    displayModel(value, activeModel, type)
+    {
+      if(activeModel)
+      {
+        if(value)
+        {
+          if(type == "input")
+          {
+            this.view.scene.add( activeModel.inputPLY);
+            console.log("input")
+          }
+          else if(type == "labels")
+          {
+            this.view.scene.add( activeModel.labelledPLY);
+            console.log("lablled")
+          }
+          else if(type == "mesh")
+          {
+            this.view.scene.add( activeModel.mesh);
+          }
+        }
+        else
+        {
+          if(type == "input")
+          {
+            this.view.scene.remove( activeModel.inputPLY);
+          }
+          else if(type == "labels")
+          {
+            this.view.scene.remove( activeModel.labelledPLY);
+          }
+          else if(type == "mesh")
+          {
+            this.view.scene.remove( activeModel.mesh);
+          }
+        }
+      }
+    }
+
+    
   //change the color of the active objet
-  changeColor(value)
+  updateColor(value)
   {
     console.log("Changing Color of Active Model");
 
@@ -141,51 +179,48 @@ export default class Controller
     }
   }
 
+
   //toggles point display by label via shaders
-  toggleDisplay(bool, label)
+  togglePoints(bool, label)
   {
 
-    if(this.model.activeScene.labelledPLY){
+    this.model.activeScene.labelledPLY.display[label] = bool;
 
-      this.model.activeScene.labelledPLY.display[label] = bool;
+    var colors = this.model.activeScene.labelledPLY.geometry.attributes.color;
+    var pointSize = this.model.activeScene.labelledPLY.geometry.attributes.pointSize;
+    
+    colors.needsUpdate = true;
+    pointSize.needsUpdate = true;
 
-      var colors = this.model.activeScene.labelledPLY.geometry.attributes.color;
-      var pointSize = this.model.activeScene.labelledPLY.geometry.attributes.pointSize;
-      var opacity  = this.model.activeScene.labelledPLY.geometry.attributes.opacity;
-      
-      colors.needsUpdate = true;
-      pointSize.needsUpdate = true;
-      opacity.needsUpdate = true;
+    const key = Object.keys(this.model.labelMap).find(key => this.model.labelMap[key] === label)
+    const vals = key.slice(1, key.length-1).split(", ");
+    var cols = vals.map(Number);
+    var cols = cols.map(x => x / 255.0);
 
-      const key = Object.keys(this.model.labelMap).find(key => this.model.labelMap[key] === label)
-      const vals = key.slice(1, key.length-1).split(", ");
-      var cols = vals.map(Number);
-      var cols = cols.map(x => x / 255.0);
+    var onColor = new THREE.Color().fromArray(cols);
 
-      var onColor = new THREE.Color().fromArray(cols);
-      console.log(onColor);
+    //loop over the color attributes
+    for ( var i = 0; i < colors.count; i ++ ) {
 
-      //loop over the color attributes
-      for ( var i = 0; i < colors.count; i ++ ) {
-
-        if(this.model.activeScene.labelledPLY.labelledPoints[i] === label)
+      if(this.model.activeScene.labelledPLY.labelledPoints[i] === label)
+      {
+        if(bool){
+          pointSize.setX(i, this.model.defaultPointSize);
+        }
+        else
         {
-          if(bool){
-            pointSize.setX(i, this.model.defaultPointSize);
-          }
-          else
-          {
-            pointSize.setX(i, 0.0);
-          }
+          pointSize.setX(i, 0.0);
         }
       }
     }
+  
 
     this.model.activeScene.labelledPLY.toggles[label] = bool;
-    console.log(this.model.activeScene.labelledPLY)
   }
 
-  changePointSize(pointSize)
+
+  //update the point size attribute which is passed to the shader
+  updatePointSize(pointSize)
   {
     if(this.model.activeScene.labelledPLY){
 
@@ -193,103 +228,174 @@ export default class Controller
       this.model.defaultPointSize = pointSize;
       attrPointSize.needsUpdate = true;
 
-      if(this.model.activeScene.labelledPLY.labels.length > 0) {
-      //loop over the color attributes
-        for ( var i = 0; i < attrPointSize.count; i ++ ) {
+      //loop over the point size attributes
+      for ( var i = 0; i < attrPointSize.count; i++ ) {
 
-          //check if the point is disabled
-          if(attrPointSize.getX(i) != 0.0){
-
-            attrPointSize.setX(i, pointSize);
-          }
-        }
+          attrPointSize.setX(i, pointSize);
+        
       }
     }
   }
 
-  changeOpacity(opacity)
+  //changes opacity of points in cloud
+  updateOpacity(opacity)
   {
     if(this.model.activeScene){
 
-  
       var attrOpacity = this.model.activeScene.inputPLY.geometry.attributes.opacity;
       this.model.defaultOpacity = opacity;
       attrOpacity.needsUpdate = true;
       
-      //loop pts
-        for ( var i = 0; i < attrOpacity.count; i ++ ) {
+      //loop over opacity attribute
+        for ( var i = 0; i < attrOpacity.count; i++ ) {
 
             attrOpacity.setX(i, opacity);
           
         }
-      
     }
   }
-    
-    //need to fix case where model is changed and unticked
-  display(value, activeModel, type)
+
+
+  updateTogglesLabels()
   {
-    if(activeModel)
+    try
     {
-      if(value)
-      {
-        if(type == "input")
-        {
-          this.view.scene.add( activeModel.inputPLY);
-          console.log("input")
-        }
-        else if(type == "labels")
-        {
-          this.view.scene.add( activeModel.labelledPLY);
-          console.log("lablled")
-        }
-        else if(type == "mesh")
-        {
-          this.view.scene.add( activeModel.mesh);
-        }
-      }
-      else
-      {
-        if(type == "input")
-        {
-          this.view.scene.remove( activeModel.inputPLY);
-        }
-        else if(type == "labels")
-        {
-          this.view.scene.remove( activeModel.labelledPLY);
-        }
-        else if(type == "mesh")
-        {
-          this.view.scene.remove( activeModel.mesh);
-        }
-      }
+      this.gui.removeFolder("Filter by Labels");
     }
+    catch
+    {}
+
+    if(this.model.activeScene.labelledPLY) {
+
+      //create dictionary to hold the label toggle state
+      let toggle = {};
+
+      let activeLabelCount = this.model.activeScene.labelledPLY.labels.length 
+
+      for(var i = 0; i < activeLabelCount; i++){
+
+        let key = stringifyArray(this.model.activeScene.labelledPLY.labels[i])
+        toggle[this.model.labelMap[key]] = true;
+      }
+
+      this.model.activeScene.labelledPLY.toggles = toggle;
+
+      this.UI.folderLabels = this.gui.addFolder('Filter by Labels');
+
+      this.UI.folderLabels.open()
+
+      for(const key of Object.keys(this.model.activeScene.labelledPLY.display)){
+        this.UI.folderLabels.add(this.model.activeScene.labelledPLY.display, key).onChange((bool) => this.togglePoints(bool, key));;
+      }
+
+  }
   }
 
-
-
-  
-  }
-  function objToString(obj)
+  //add the display toggles
+  updateTogglesDisplay()
   {
-    let arr = Object.values(obj);
 
-    var str = "[";
-    str += arr.join(", ");
-    str += "]";
-    
-    return str;
-  }
+    let UI = this.UI;
 
+    //add display toggle for input
+    UI.folderInputs.remove(UI.toggleInputs)
+    UI.toggleInputs = UI.folderInputs.add(UI.displayInput, 'display').name("Show Input");
+    UI.toggleInputs.onChange((value) => this.displayModel(value, this.model.activeScene, "input"));
 
-//https://stackoverflow.com/questions/14710559/dat-gui-how-to-hide-menu-with-code
-  dat.GUI.prototype.removeFolder = function(name) {
-    var folder = this.__folders[name];
-    if (!folder) {
-      return;
+    try
+    {
+      UI.folderInputs.remove(UI.toggleLabels)
+    } 
+    catch
+    {}
+
+    try
+    {
+      UI.folderInputs.remove(UI.toggleMesh)
+    } 
+    catch
+    {}
+
+    //add display toggle for labels if present
+    if(this.model.activeScene.labelledPLY)
+    {
+      UI.toggleLabels = UI.folderInputs.add(UI.displayLabel, 'display').name("Show Labels");
+      UI.toggleLabels.onChange((value) => this.displayModel(value, this.model.activeScene, "labels"));
     }
-    folder.close();
-    this.__ul.removeChild(folder.domElement.parentNode);
-    delete this.__folders[name];
-    this.onResize();
+ 
+
+    //add display toggle for mesh if present
+    if(this.model.activeScene.mesh)
+    {      
+      UI.toggleMesh = UI.folderInputs.add(UI.displayMesh, 'display').name("Show Mesh");
+      UI.toggleMesh.onChange((value) => this.displayModel(value, this.model.activeScene, "mesh"));
+    }
   }
+
+  updateTogglesPointSize()
+  {
+    let UI = this.UI;
+
+    try{        
+      UI.folderDisplay.remove(UI.displayPointSize);
+    } 
+    catch 
+    {}
+    if(this.model.activeScene.labelledPLY){
+
+      UI.displayPointSize = UI.folderDisplay.add({pointSize : 2.0}, 'pointSize', 0.0, 20.0).name("Labels Point Size");
+      UI.displayPointSize.onChange((value) => this.updatePointSize(value));
+    }
+  }
+
+updateSceneData()
+{
+  console.log(this.model.activeScene)
+  let unitsVol = " m<sup>3</sup>"
+  let unitsDens = " pts / m<sup>3</sup>"
+  let inputData = 
+   
+    "Input Point Count - " + this.model.activeScene.inputPLY.ptCount + "<br>" +
+    "Input Point Volume - " + this.model.activeScene.inputPLY.volume.toFixed(2) +  unitsVol + "<br>" + 
+    "Input Point Density - " + this.model.activeScene.inputPLY.density.toFixed(2) +  unitsDens + "<br>" 
+
+
+  let labelledData = "";
+  if(this.model.activeScene.labelledPLY){
+    labelledData = "<br>" + 
+    "Labelled Point Count - "  + this.model.activeScene.labelledPLY.ptCount + "<br>" + 
+    "Labelled Point Volume - " + this.model.activeScene.labelledPLY.volume.toFixed(2)  + unitsVol + "<br>" + 
+    "Labelled Point Density - " + this.model.activeScene.labelledPLY.density.toFixed(2)  + unitsDens 
+  }
+
+  this.sceneData.innerHTML = inputData + labelledData;
+
+  }
+}
+
+//helper functions
+
+//convert from an array [125, 125, 125] to a string like "[125, 125, 125]"
+function stringifyArray(obj)
+{
+  let arr = Object.values(obj);
+
+  var str = "[";
+  str += arr.join(", ");
+  str += "]";
+  
+  return str;
+}
+
+//add remove folder to dat gui
+//https://stackoverflow.com/questions/14710559/dat-gui-how-to-hide-menu-with-code
+dat.GUI.prototype.removeFolder = function(name) {
+  var folder = this.__folders[name];
+  if (!folder) {
+    return;
+  }
+  folder.close();
+  this.__ul.removeChild(folder.domElement.parentNode);
+  delete this.__folders[name];
+  this.onResize();
+}

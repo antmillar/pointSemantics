@@ -10,12 +10,6 @@ export default class Model
   constructor(name)
   {
     this.name = name;
-    this.filesInputs = {};
-    this.filesOutputs = {};
-    this.filesMeshes = {};
-    this.activeModelInput;
-    this.activeModelOutput;
-    this.activeModelMesh;
     this.activeScene;
     this.scenes = {};
 
@@ -23,7 +17,7 @@ export default class Model
     this.pathInput = "/static/models/inputs/";
     this.pathLabelled = "/static/models/outputs/";
     this.pathMesh = "/static/models/meshes/";
-    this.defaultPointSize = 3.0;
+    this.defaultPointSize = 2.0;
     this.defaultOpacity = 1.0;
 
     this.labelMap =   {
@@ -47,27 +41,25 @@ export default class Model
     "[158, 218, 229]":		 "shower curtain",
     "[44, 160, 44]":  		 "toilet",
     "[112, 128, 144]":		 "sink",
-    "[82, 84, 163]":      "otherfurn"
+    "[82, 84, 163]":      "other"
 
     }
-    
-
-
   }
 
+  //load the data from folders into scenes
   loadScenes(inputFiles, labelFiles, meshFiles)
   {
-    //item is a fn
     var that = this;
     inputFiles.forEach(function(item, index){
 
     var scene = new Scene(item);
     that.scenes[item] = scene;
+
     })
 
     for (const [name, scene] of Object.entries(that.scenes)) {
 
-      //add files in input directory to scene objet
+      //add files in input directory to scene object
       that.loadGeometry(name, scene, that.pathInput, "input");
 
       //add files in labelled directory to scene object
@@ -78,12 +70,12 @@ export default class Model
         }
 
       //add files in mesh directory to scene object
-      let mesh_name = name.slice(0, -4) + "_labels.obj"
+      let mesh_name = name.slice(0, -4) + ".obj"
       if(meshFiles.includes(mesh_name))
         {
           that.loadGeometry(mesh_name, scene, that.pathMesh, "mesh");
         }
-    }
+      }
 
     console.log(that.scenes)
   }
@@ -124,243 +116,252 @@ export default class Model
 
     plyLoader.load(root + fn, (geometry) => {
 
-    console.log('Loading : ' + root + fn);
+      console.log('Loading : ' + root + fn);
 
-    geometry.computeVertexNormals();
-    //assign point sizes
-    let pointSize = new Float32Array( geometry.attributes.position.count);
-    pointSize.fill(this.defaultPointSize);
-    geometry.setAttribute( 'pointSize', new THREE.BufferAttribute( pointSize, 1 ) );
+      geometry.computeVertexNormals();
 
-    //assign opacity
-    let opacity = new Float32Array( geometry.attributes.position.count);
-    opacity.fill(this.defaultOpacity);
-    geometry.setAttribute( 'opacity', new THREE.BufferAttribute( opacity, 1.0 ) );
+      //get positions attribute
+      let positions = geometry.getAttribute("position");
+      let count = positions.count
 
-    //assign materials
-    let material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.1, vertexColors: THREE.VertexColors })
+      //assign point size attribute
+      let pointSize = new Float32Array(count);
+      pointSize.fill(this.defaultPointSize);
+      geometry.setAttribute( 'pointSize', new THREE.BufferAttribute( pointSize, 1 ) );
 
-    let shaderMaterial = new THREE.ShaderMaterial({
+      //assign opacity attribute
+      let opacity = new Float32Array(count);
+      opacity.fill(this.defaultOpacity);
+      geometry.setAttribute( 'opacity', new THREE.BufferAttribute( opacity, 1.0 ) );
 
-      vertexShader : Shaders.vertexShader(),
-      fragmentShader : Shaders.fragmentShader(),
-      // blending: THREE.AdditiveBlending,
-      depthTest: false,
-      transparent: true,
+      //assign color attribute
+      if(!geometry.getAttribute("color")){
+        geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
+      }
 
-    })
+      let colors =  geometry.getAttribute("color");
+      let colorsScaled = colors.array.map(x => x * 255.0);
 
+  
 
-    //create point cloud
-    let pcd = new THREE.Points( geometry, shaderMaterial );
-    pcd.name = fn;
-    pcd.labels = [];
-    pcd.rotation.x = -Math.PI / 2;
+      //assign materials
+      let shaderMaterial = new THREE.ShaderMaterial({
 
-    let positions = geometry.getAttribute("position");
-    let count = positions.count
-
-    //rescaling and translating for the canvas
-    function average(nums){return nums.reduce((a, b) => (a + b)) / nums.length}
-
-    let xMean = average(positions.array.filter((_,i) => i % 3 === 0));
-    let yMean = average(positions.array.filter((_,i) => (i+1) % 3 === 0));
-    let zMin = Math.min(...positions.array.filter((_,i) => (i+2) % 3 === 0));
-
-    //console.log(xMean,yMean,zMean);
-      
-    // pcd.position.x = -xMean;
-    pcd.position.y = -zMin;
-    // pcd.position.z = -yMean;
-
-    pcd.scale.set(2, 2, 2);
+        vertexShader : Shaders.vertexShader(),
+        fragmentShader : Shaders.fragmentShader(),
+        // blending: THREE.AdditiveBlending,
+        depthTest: false,
+        transparent: true, //allows opacity
+      })
 
 
-    //if no color present create new buffer attribute
-    if(!geometry.getAttribute("color")){
-      geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
-    }
+      //create the point cloud
+      let pcd = new THREE.Points( geometry, shaderMaterial );
+      pcd.name = fn;
+      pcd.labels = [];
+      pcd.rotation.x = -Math.PI / 2; //align to threeJS
+      // pcd.scale.set(2, 2, 2);
 
-    let colors =  geometry.getAttribute("color");
-    let colorsScaled = colors.array.map(x => x * 255.0);
+      //translate to origin
+      var center = new THREE.Vector3();
+      var size = new THREE.Vector3();
+      var bbox = new THREE.Box3().setFromObject(pcd);
 
-    //if file has labels process these
-    if(type == "output"){
+      bbox.getCenter(center);
+      bbox.getSize(size);
 
+      pcd.translateZ(center.y); //place on plane
+      pcd.geometry.center();
 
-      //extract color r g b into triplets as strings e.g [""]
-      var coords = colorsScaled.reduce(function(result, _, index, array) {
-
-        if(index % 3 === 0)
-        {
-          result.push(array.slice(index, index + 3));
-        }
-        return result
-
-      }, []);
-
-      pcd.labelledPoints = coords.map(x=> this.labelMap[objToString(x)]);
-
-      //extract the set of colors present
-      let set = new Set(coords.map(JSON.stringify));
-      let unique = Array.from(set).map(JSON.parse);
-
-      pcd.labels = unique.map(x => this.labelMap[objToString(x)]);
-      pcd.display = {};
-      pcd.labels.forEach(label => {pcd.display[label] = true;});
-      pcd.toggles = [];
-    }
-      
+      //get metadata
+      pcd.ptCount = pcd.geometry.attributes.position.count;
+      pcd.volume = (size.x * size.y * size.z);
+      pcd.density = (pcd.ptCount / pcd.volume);
 
 
-    //add to loaded filesInputs
-    // dest[fn] = pcd;
+          //if file has labels process these
+          if(type == "output"){
+
+
+            //extract color r g b into triplets as strings e.g [""]
+            var coords = colorsScaled.reduce(function(result, _, index, array) {
     
+              if(index % 3 === 0)
+              {
+                result.push(array.slice(index, index + 3));
+              }
+              return result
+    
+            }, []);
+    
+            pcd.labelledPoints = coords.map(x=> this.labelMap[objToString(x)]);
+    
+            //extract the set of colors present
+            let set = new Set(coords.map(JSON.stringify));
+            let unique = Array.from(set).map(JSON.parse);
+    
+            pcd.labels = unique.map(x => this.labelMap[objToString(x)]);
+            pcd.display = {};
+            pcd.labels.forEach(label => {pcd.display[label] = true;});
+            pcd.toggles = [];
+          }
 
-    if(type == "input")
-    {      
-      scene.inputPLY = pcd;
-    }
-    else if(type == "output")
-    {
-      scene.labelledPLY = pcd;
-    }
- 
 
-    // this.scenes[fn] = scene;
+      //assign to scene objects
+      if(type == "input")
+      {      
+        scene.inputPLY = pcd;
+        scene.inputPLY.name = "inputPLY"
+      }
+      else if(type == "output")
+      {
+        scene.labelledPLY = pcd;
+        scene.labelledPLY.name = "labelledPLY"
 
-    //dispatch event to say file loaded
-    btnLoad.dispatchEvent(this.eventLoaded);
-    console.log(`Loaded : ${fn}`);
-    });
+      }
+  
+      //dispatch event to say file loaded
+      btnLoad.dispatchEvent(this.eventLoaded);
+      console.log(`Loaded : ${fn}`);
+
+     });
   }
 
 
-    //load OBJ file from fn
-    loadOBJ(fn, scene, root){
-      {
-        const objLoader = new OBJLoader2();
-        console.log('Loading : ' + root + fn);
-      
-        //need to update this to properly parse the file
-        objLoader.load(root + fn, (geometry) => {
-      
-          //hacky check for whether geometry in children
+  //load OBJ file from fn
+  loadOBJ(fn, scene, root){
+    {
+      const objLoader = new OBJLoader2();
 
-          let object;
-
-          if(!(object = geometry.children[0]))
-          {
-
-            object = geometry;
-          }
-          object.name = fn;
-          var count = object.geometry.attributes.position.count;
-          
-            let scale = 2;
-            if(fn.slice(0,5) == "chair"){
-            scale = 0.005
-            // object.rotation.x = -Math.PI / 2;
-            }
-            object.rotation.x = -Math.PI / 2;
-            object.scale.set(scale, scale, scale);
-
-            var positions = object.geometry.getAttribute("position");
-
-            function average(nums){return nums.reduce((a, b) => (a + b)) / nums.length}
-            console.log(positions.count);
-        
-            let xMean = average(positions.array.filter((_,i) => i % 3 === 0));
-            let yMean = average(positions.array.filter((_,i) => (i+1) % 3 === 0));
-            // let zMean = Math.min(...positions.array.filter((_,i) => (i+2) % 3 === 0));
-        
-            // console.log(xMean,yMean,zMean);
-                
-            object.position.x = -xMean * scale;
-            // object.position.y = -zMean * scale;
-            object.position.z = -yMean * scale;
+      console.log('Loading : ' + root + fn);
     
-        const mat = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, side: THREE.DoubleSide } ); //color: 0xf1f1f1, 
+      objLoader.load(root + fn, (geometry) => {
+    
+        //hacky check for whether geometry in children
 
-        function initColor(parent, mtl) {
-        parent.traverse((o) => {
-            if (o.isMesh) {
-                    o.material = mtl;
-            }
-          });
-          }
+      let mesh;
 
-        //assign vertex colors material to model
-        initColor(object, mat);
+      if(!(mesh = geometry.children[0]))
+      {
+
+        mesh = geometry;
+      }
+
+      mesh.name = fn;
+      mesh.rotation.x = -90 * Math.PI/180;
+
+      let center = new THREE.Vector3();
+      let bbox = new THREE.Box3().setFromObject(mesh);
+      let size = new THREE.Vector3;
+
+      bbox.getSize(size);
+      bbox.getCenter(center);
+
+      mesh.ptCount = mesh.geometry.attributes.position.count;
+      mesh.volume = (size.x * size.y * size.z);
+      mesh.density = (mesh.ptCount / mesh.volume);
+
+      mesh.translateY(center.z);
+      mesh.translateX(-center.x);
       
-        scene.mesh = object;
-        //dispatch event to say file loaded
-        console.log(`Loaded : ${fn}`);
-        btnLoad.dispatchEvent(this.eventLoaded);
+      var count = mesh.geometry.attributes.position.count;
+      
+      let scale = 1;
+      if(fn.slice(0,5) == "chair"){
+      scale = 0.005
+      // mesh.rotation.x = -Math.PI / 2;
+      }
+
+      mesh.scale.set(scale, scale, scale);
+
+      var positions = mesh.geometry.getAttribute("position");
+
+      console.log(positions.count);
+    
+      const mat = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, side: THREE.DoubleSide } ); //color: 0xf1f1f1, 
+
+      //needed if has subobjects
+      function initColor(parent, mtl) {
+      parent.traverse((o) => {
+          if (o.isMesh) {
+                  o.material = mtl;
+          }
         });
-      }
-      }
-
-      //running the model on input PLY file
-      runModel()
-      {
-        //if there is an active scene
-        if(this.activeScene)
-        {
-
-        document.querySelector("#fileNameInput").value = this.activeScene.name;
-        document.querySelector('#btnModel').submit();
-        alert("Running Model...");
-
-        } 
-        else 
-        {
-          alert("Warning : No Scene Selected")
         }
-      }
+
+      //assign vertex colors material to model
+      initColor(mesh, mat);
+    
+      scene.mesh = mesh;
+      scene.mesh.name = "mesh";
+      //dispatch event to say file loaded
+      console.log(`Loaded : ${fn}`);
+      btnLoad.dispatchEvent(this.eventLoaded);
+      });
+    }
+    }
+
+  //running the model on input PLY file
+  runModel()
+  {
+    //if there is an active scene
+    if(this.activeScene)
+    {
+
+    document.querySelector("#fileNameInput").value = this.activeScene.name;
+    document.querySelector('#btnModel').submit();
+    alert("Running Model...");
+
+    } 
+    else 
+    {
+      alert("Warning : No Scene Selected")
+    }
+  }
 
 
-      createMesh()
+  createMesh()
+  {
+
+    // console.error("not implemented yet")
+    if(this.activeScene){
+      if(this.activeScene.labelledPLY){
+
+        let filters = this.collateFilters();
+        document.querySelector("#filters").value = filters;
+        document.querySelector("#fileNameOutput").value = this.activeScene.name;
+        document.querySelector('#btnMesh').submit();
+        alert("Generating Mesh...");
+
+      } 
+      else 
       {
-        // console.error("not implemented yet")
-        if(this.activeScene){
-          if(this.activeScene.labelledPLY){
-
-            let filters = this.collateFilters();
-            document.querySelector("#filters").value = filters;
-            document.querySelector("#fileNameOutput").value = this.activeScene.labelledPLY.name;
-            document.querySelector('#btnMesh').submit();
-            alert("Generating Mesh...");
-
-          } 
-          else 
-          {
-            alert("Warning : Must Generate a Labelled PLY File first by running the model")
-          }
-        }
-        else
-        {
-          alert("Warning : No Scene Selected")
-        }
-        
+        alert("Warning : Must Generate a Labelled PLY File first by running the model")
       }
+    }
+    else
+    {
+      alert("Warning : No Scene Selected")
+    }
+    
+  }
 
-      //generate list of labels to be filtered server side
-      collateFilters()
+  //generate list of labels to be filtered server side
+  collateFilters()
+  {
+    var that = this;
+    let labelsToFilter = [];
+
+    Object.keys(that.activeScene.labelledPLY.display).forEach(function(item, index)
+    {
+      if(that.activeScene.labelledPLY.display[item] === false)
       {
-        var that = this;
-        let labelsToFilter = [];
-
-        Object.keys(that.activeScene.labelledPLY.display).forEach(function(item, index)
-        {
-          if(that.activeScene.labelledPLY.display[item] === false)
-          {
-            labelsToFilter.push(item)
-          }
-        })
-        
-        return labelsToFilter;
+        labelsToFilter.push(item)
       }
+    })
+    
+    return labelsToFilter;
+  }
 }
 
 function objToString(obj)

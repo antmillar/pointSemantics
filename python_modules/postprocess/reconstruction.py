@@ -4,9 +4,12 @@ import numpy as np
 def save_to_mesh(folder, dest, fn, filters, reconstruction_method = "ballpivot"):
 
     print("loading PLY file...")
-    pcd = o3d.io.read_point_cloud(folder + "/" + fn)
+    print(folder + "/" + fn)
+    pcd = o3d.io.read_point_cloud(folder + "/" + fn[:-4] + "_labels.ply")
+    print(f"center {pcd.get_center()}")
 
     #if filters given filter the mesh
+
     if(len(filters) > 0):
         print("filtering vertices...")
         pcd = filter_mesh(pcd, filters)
@@ -27,6 +30,7 @@ def save_to_mesh(folder, dest, fn, filters, reconstruction_method = "ballpivot")
         ball_radius = o3d.utility.DoubleVector(ball_radius)
 
         mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(pcd, ball_radius)
+        # mesh.merge_close_vertices(0.1)
 
 
     #use poisson reconstruction - gives a slightly smoother reconstruction, but as it's probabilistic needs texture mapping
@@ -39,11 +43,12 @@ def save_to_mesh(folder, dest, fn, filters, reconstruction_method = "ballpivot")
 
         #remove any points with density below threshold
         print("filtering densities...")
-        mask_densities = densities < np.quantile(densities, 0.1)
+        mask_densities = densities < np.quantile(densities, 0.2)
         mesh.remove_vertices_by_mask(mask_densities)
 
     #add vertex colors from pcd
     mesh.vertex_colors = pcd.colors
+    print(f"m center {mesh.get_center()}")
 
     # pMesh.merge_close_vertices(0.05)
     print("saving mesh...")
@@ -73,7 +78,7 @@ filterMap = {
 "shower curtain" :   [158., 218., 229.],
 "toilet"         :   [44., 160., 44.],
 "sink"           :   [112., 128., 144.],
-"otherfurn"      :   [82., 84., 163.]
+"other"      :   [82., 84., 163.]
 
 }
 

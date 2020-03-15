@@ -96,6 +96,7 @@ def modelViewer():
             filterList = []
             if (request.form.get("filters")):
                 filterList = request.form.get("filters").split(",")
+            print(filterList)
 
             reconstruction.save_to_mesh(output_path, mesh_path, fileName, filters = filterList)
 

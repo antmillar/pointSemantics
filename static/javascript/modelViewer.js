@@ -6,7 +6,11 @@ import Scene from './js/scene.js';
 
 document.querySelector(".navbar").className = "navbar navbar-expand-lg navbar-light fixed-top"
 
-var view = new View();
+
+var mouse = new THREE.Vector2();
+
+
+var view = new View(mouse);
 var model = new Model();
 
 var controller = new Controller(view, model);
@@ -27,14 +31,18 @@ var controller = new Controller(view, model);
 
 
 
+function onMouseMove( event ) {
+
+    //normalized device coords (-1 to 1)
+    mouse.x = ( (event.offsetX) / window.innerWidth ) * 2 - 1;
+    mouse.y = -( (event.offsetY) / window.innerHeight ) * 2 + 1;
+
+}
+
 //these arrays are loaded in the HTML template
 
 model.loadScenes(inputFiles, outputFiles, meshFiles);
-// model.loadOutputs(outputFiles);
-// model.loadMeshes(meshFiles);
-// console.log(model.filesInputs)
-// console.log(model.filesOutputs)
-// console.log(model.filesMeshes)
-console.log(model.scenes)
+
+window.addEventListener( 'mousemove', onMouseMove, false );
 
 requestAnimationFrame(() => view.render());
