@@ -81,11 +81,11 @@ export default class View
           if(this.raycaster.intersectObject(sceneChildren[i])[0]){
 
             intersectPt = this.raycaster.intersectObject(sceneChildren[i])[0].index;
-            document.querySelector("#hoverLabel").innerHTML = "Point Label - " + sceneChildren[i].labelledPoints[intersectPt]
+            document.querySelector("#hoverLabel").innerHTML = sceneChildren[i].labelledPoints[intersectPt]
           }
         else
         {
-          document.querySelector("#hoverLabel").innerHTML = "Point Label - "
+          document.querySelector("#hoverLabel").innerHTML = ""
         }
         }        
       }   

@@ -41,7 +41,6 @@ cwd = os.getcwd()
 output_path = cwd + '/static/img/output'
 load_path = cwd + '/static/models/load'
 input_path = cwd + '/static/models/inputs'
-input_clean_path = cwd + '/static/models/inputs_clean'
 output_path = cwd + '/static/models/outputs'
 mesh_path = cwd + '/static/models/meshes'
 
@@ -110,11 +109,13 @@ def modelViewer():
         
             fileName = request.form.get("fileNameOutput")
             filterList = []
+
+            #get the label filters
             if (request.form.get("filters")):
                 filterList = request.form.get("filters").split(",")
             print(filterList)
 
-            reconstruction.save_to_mesh(output_path, mesh_path, fileName, filters = filterList)
+            reconstruction.save_to_mesh(input_path, output_path, mesh_path, fileName, filters = filterList)
 
             statusText = "view mode"
 

@@ -46,7 +46,7 @@ export default class Controller
     UI.folderDisplay = this.gui.addFolder('Display Settings');
     //create color picker
     // folder.addColor({modelcolor: 0.00}, 'modelcolor').name('Model Color').onChange((value) => this.updateColor(value));
-    UI.displayOpacity = UI.folderDisplay.add({opacity : 0.1}, 'opacity', 0.0, 0.2).name("Scene Opacity");
+    UI.displayOpacity = UI.folderDisplay.add({opacity : 0.1}, 'opacity', 0.0, 0.5).name("Scene Opacity");
     UI.displayOpacity.onChange((value) => this.updateOpacity(value));
     UI.displayPointSize = UI.folderDisplay.add({pointSize : 2.0}, 'pointSize', 0.0, 20.0).name("Labels Point Size");
     UI.displayPointSize.onChange((value) => this.updatePointSize(value));
