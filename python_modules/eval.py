@@ -9,12 +9,10 @@ from pathlib import Path
 import numpy
 
 #static
-dir_root = "/home/anthony/repos/Pointnet2.ScanNet" 
-dir_scannet =  "/home/anthony/repos/Datasets/ScanNet/scans"
-dir_scenes = '/home/anthony/repos/Datasets/ScanNet/scans'
-dir_model = '/home/anthony/repos/pointSemantics/torchModels/'
-dir_data = '/home/anthony/repos/pointSemantics/static/models'
-dir_output = '/home/anthony/repos/pointSemantics/static/models/outputs'
+cwd = os.getcwd()
+dir_model = cwd + '/torchModels/'
+dir_data = cwd + '/static/models'
+dir_output = cwd + '/static/models/outputs'
 batch_size = 1
 
 labelMap = [
@@ -100,7 +98,6 @@ def evaluate(input_path : str, fn : str, density : float):
     print("loading model...")
     model_path = os.path.join(dir_model, "model.pth")
     model = pointnet2_semseg.get_model(num_classes=20, is_msg = False).cuda()
-    print(model)
     model.load_state_dict(torch.load(model_path))
     model.eval()
     

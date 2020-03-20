@@ -1,5 +1,5 @@
 #python library imports
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 import os
 import torch
 import json
@@ -16,22 +16,6 @@ import python_modules.postprocess.reconstruction as reconstruction
 global statusText
 statusText = "view mode"
 
-# class ExportingThread(threading.Thread):
-#     def __init__(self, name):
-#         threading.Thread.__init__(self)
-#         self.name = name
-#         self.count = 0
-#         self.statusText = ""
-
-#     def run(self):
-
-#         for _ in range(1000):
-#             time.sleep(1)
-#             self.count += 1
-#             self.statusText = statusText
-
-
-
 app = Flask(__name__ , static_url_path = '/static' )
 
  #prevent file caching
@@ -43,7 +27,6 @@ load_path = cwd + '/static/models/load'
 input_path = cwd + '/static/models/inputs'
 output_path = cwd + '/static/models/outputs'
 mesh_path = cwd + '/static/models/meshes'
-
 
 @app.route('/')
 def index():
@@ -66,6 +49,7 @@ def modelViewer():
 
     if request.method == "POST":
 
+        # loads files
         if(request.form.get("fileNameLoad")):
 
             fileToCopy = request.form.get("fileNameLoad")
@@ -80,7 +64,35 @@ def modelViewer():
 
             statusText = "view mode"
 
-        #if the request is from the run model button
+        # removes files
+        elif(request.form.get("fileNameRemove")):
+
+            fileToRemove = request.form.get("fileNameRemove")
+
+            print(input_path + "/" + fileToRemove)
+
+            statusText = f"removing file : {fileToRemove}.."
+
+            os.remove(input_path + "/" + fileToRemove)
+
+            try:
+                os.remove(output_path + "/" + fileToRemove[:-4] + "_labels.ply")
+            except:
+                pass
+
+            try:
+                os.remove(mesh_path + "/" + fileToRemove[:-4] + ".obj")
+            except:
+                pass
+
+            try:
+                os.remove(mesh_path + "/" + fileToRemove[:-4] + ".mtl")
+            except:
+                pass
+
+            statusText = "view mode"
+
+        #runs model
         elif(request.form.get("fileNameInput")):
         
             fileName = request.form.get("fileNameInput")
@@ -90,8 +102,9 @@ def modelViewer():
             print(input_path + "/" + fileName)
 
             statusText = "calculating stats.."
+
             #get stats for cleaned pointcloud
-            mean, minmax, variance, volume, ptCount, density = preprocess_utils.get_stats(input_path, fileName)
+            _, _, _, _, _, density = preprocess_utils.get_stats(input_path, fileName)
             
             print(f"density : {density}")
 
@@ -99,11 +112,8 @@ def modelViewer():
             #load filtered pointcloud, apply the model and save to new ply file
             eval.evaluate(input_path, fileName, density)
         
-            statusText = "view mode"
-
-        #if the request is from the create mesh button
+        #creates mesh
         elif (request.form.get("fileNameOutput")):
-
 
             statusText = "reconstructing mesh.."
         
@@ -119,6 +129,16 @@ def modelViewer():
 
             statusText = "view mode"
 
+        #downloads mesh
+        elif (request.form.get("fileNameDownload")):
+
+            fileName = request.form.get("fileNameDownload")[:-4] + ".obj" 
+
+            print(f"downloading {fileName}")
+
+            #open3d seems to always create an MTL file, can't figure out how to remove it. But the model should load fine without the MTL.
+            return send_from_directory(directory=mesh_path, filename=fileName , as_attachment=True)
+
         #https://en.wikipedia.org/wiki/Post/Redirect/Get
         return redirect(url_for('modelViewer'))
 
@@ -126,5 +146,4 @@ def modelViewer():
 
 
 if __name__ == '__main__':
-    app.run()
-
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

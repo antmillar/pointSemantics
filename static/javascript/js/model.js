@@ -295,6 +295,7 @@ export default class Model
     
       scene.mesh = mesh;
       scene.mesh.name = "mesh";
+
       //dispatch event to say file loaded
       console.log(`Loaded : ${fn}`);
       btnLoad.dispatchEvent(this.eventLoaded);
@@ -318,14 +319,12 @@ export default class Model
   runModel()
   {
 
-
     //if there is an active scene
     if(this.activeScene)
     {
 
     document.querySelector("#fileNameInput").value = this.activeScene.name;
     document.querySelector('#btnModel').submit();
- 
 
     } 
     else 
@@ -338,10 +337,8 @@ export default class Model
   createMesh()
   {
 
-    // console.error("not implemented yet")
     if(this.activeScene){
       if(this.activeScene.labelledPLY){
-
 
         let filters = this.collateFilters();
         document.querySelector("#filters").value = filters;
@@ -360,6 +357,55 @@ export default class Model
     }
     
   }
+
+  downloadMesh()
+  {
+    var that = this;
+    if(this.activeScene){
+
+      if(that.activeScene.mesh){
+        document.querySelector("#fileNameDownload").value = that.activeScene.name;
+        document.querySelector('#downloadFile').submit();
+      }
+
+      else
+
+      {
+        alert("Warning : No Mesh Created Yet")
+      }
+    }
+    else
+    {
+      alert("Warning : No Model Selected")
+    }
+    
+  }
+
+  removeModel()
+  {
+    var that = this;
+    // console.error("not implemented yet")
+    if(this.activeScene){
+
+      delete that.scenes[that.activeScene.name];
+      console.log(that.scenes);
+
+      let fileToRemove = that.activeScene.name;
+      document.querySelector("#fileNameRemove").value = fileToRemove;
+      document.querySelector('#removeFiles').submit()
+
+
+      //dispatch event to trigger dropdown refresh
+      btnLoad.dispatchEvent(this.eventLoaded);
+      console.log(`Removed : ${that.activeScene.name}`);
+    }
+    else
+    {
+      alert("Warning : No Scene Selected")
+    }
+    
+  }
+
 
   //generate list of labels to be filtered server side
   collateFilters()

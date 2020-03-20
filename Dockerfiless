@@ -1,0 +1,34 @@
+FROM pytorch/pytorch:1.0-cuda10.0-cudnn7-devel
+# FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
+WORKDIR /usr/src/app
+
+COPY . .
+
+RUN apt-get update && apt-get install -y
+# RUN apt install libgl1-mesa-glx
+# RUN apt-get install python -y
+RUN apt-get install python3-pip -y
+
+RUN pip install --upgrade pip
+
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install flask
+RUN pip install plyfile
+RUN pip install scipy
+RUN pip install open3d-python==0.5.0.0
+# RUN pip install torch
+
+
+ENV CUDA_HOME "/usr/local/cuda"
+ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+ENV NVIDIA_REQUIRE_CUDA "cuda>=10.1 brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
+
+RUN cd pointnet2 && python3 setup.py install
+RUN cd ..
+
+
+EXPOSE 5000
+
+CMD ["python3.7", "./app.py"]

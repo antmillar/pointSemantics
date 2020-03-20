@@ -23,6 +23,8 @@ export default class Controller
       loadFile: function() {that.btnLoad.click()},
       createMesh : function() {that.model.createMesh()},
       runModel: function() {that.model.runModel()},
+      removeModel: function() {that.clearView(); that.model.removeModel()},
+      downloadMesh: function() {that.model.downloadMesh()},
     };
 
     UI.displayInput = {display: false};
@@ -33,7 +35,13 @@ export default class Controller
     this.btnLoad.addEventListener('change', () => that.model.copyFile());
 
     //set up the GUI
-    this.gui.add(controls, 'loadFile').name("Load OBJ File");
+
+    //DATA FOLDER
+
+        //DELETE FOLDER
+    UI.folderRemove = this.gui.addFolder('Data');
+    UI.folderRemove.add(controls, 'loadFile').name("Load OBJ File");
+    UI.folderRemove.add(controls, 'removeModel').name("Remove Model");
     
     //SCENE FOLDER
     UI.folderInputs = this.gui.addFolder('Scenes');
@@ -45,7 +53,6 @@ export default class Controller
     // DISPLAY FOLDER
     UI.folderDisplay = this.gui.addFolder('Display Settings');
     //create color picker
-    // folder.addColor({modelcolor: 0.00}, 'modelcolor').name('Model Color').onChange((value) => this.updateColor(value));
     UI.displayOpacity = UI.folderDisplay.add({opacity : 0.1}, 'opacity', 0.0, 0.5).name("Scene Opacity");
     UI.displayOpacity.onChange((value) => this.updateOpacity(value));
     UI.displayPointSize = UI.folderDisplay.add({pointSize : 2.0}, 'pointSize', 0.0, 20.0).name("Labels Point Size");
@@ -58,15 +65,19 @@ export default class Controller
     //MESH FOLDER
     UI.folderMesh = this.gui.addFolder('Mesh Reconstruction');
     UI.folderMesh.add(controls, 'createMesh').name("Create Mesh");
+    UI.folderMesh.add(controls, 'downloadMesh').name("Download Mesh");
+
 
     //LABELS FOLDER
     UI.folderLabels;
     
     //OPEN FOLDERS
+    UI.folderRemove.open();
     UI.folderInputs.open();
     UI.folderDisplay.open();
     UI.folderModel.open();
     UI.folderMesh.open();
+
 
     this.listen();
   }
@@ -84,13 +95,7 @@ export default class Controller
       //whenever dropdown is updated update the UI as follows...
       UI.dropdownInputs.onChange(function(value) {
               
-        //if active input model present, remove it
-        if(that.model.activeScene)
-        {
-          if(that.model.activeScene.inputPLY) that.view.scene.remove(that.model.activeScene.inputPLY);
-          if(that.model.activeScene.labelledPLY) that.view.scene.remove(that.model.activeScene.labelledPLY);
-          if(that.model.activeScene.mesh) that.view.scene.remove(that.model.activeScene.mesh);
-        }
+        that.clearView();
 
         //specify new active scene
         that.model.activeScene = that.model.scenes[value];
@@ -134,7 +139,6 @@ export default class Controller
           else if(type == "labels")
           {
             this.view.scene.add( activeModel.labelledPLY);
-            console.log("lablled")
           }
           else if(type == "mesh")
           {
@@ -228,12 +232,16 @@ export default class Controller
       this.model.defaultPointSize = pointSize;
       attrPointSize.needsUpdate = true;
 
+      //reset the toggle labels to true
+
       //loop over the point size attributes
       for ( var i = 0; i < attrPointSize.count; i++ ) {
 
           attrPointSize.setX(i, pointSize);
         
       }
+
+      this.updateTogglesLabels();
     }
   }
 
@@ -267,28 +275,18 @@ export default class Controller
 
     if(this.model.activeScene.labelledPLY) {
 
-      //create dictionary to hold the label toggle state
-      let toggle = {};
-
-      let activeLabelCount = this.model.activeScene.labelledPLY.labels.length 
-
-      for(var i = 0; i < activeLabelCount; i++){
-
-        let key = stringifyArray(this.model.activeScene.labelledPLY.labels[i])
-        toggle[this.model.labelMap[key]] = true;
-      }
-
-      this.model.activeScene.labelledPLY.toggles = toggle;
-
       this.UI.folderLabels = this.gui.addFolder('Filter by Labels');
-
       this.UI.folderLabels.open()
+
+      for(const key of Object.keys(this.model.activeScene.labelledPLY.display)){
+        this.model.activeScene.labelledPLY.display[key] = true;
+      }
 
       for(const key of Object.keys(this.model.activeScene.labelledPLY.display)){
         this.UI.folderLabels.add(this.model.activeScene.labelledPLY.display, key).onChange((bool) => this.togglePoints(bool, key));;
       }
 
-  }
+    }
   }
 
   //add the display toggles
@@ -371,8 +369,20 @@ updateSceneData()
   this.sceneData.innerHTML = inputData + labelledData;
 
   }
+
+
+clearView()
+{
+  //if active input model present, remove it
+  if(this.model.activeScene)
+  {
+    if(this.model.activeScene.inputPLY) this.view.scene.remove(this.model.activeScene.inputPLY);
+    if(this.model.activeScene.labelledPLY) this.view.scene.remove(this.model.activeScene.labelledPLY);
+    if(this.model.activeScene.mesh) this.view.scene.remove(this.model.activeScene.mesh);
+  }
 }
 
+}
 //helper functions
 
 //convert from an array [125, 125, 125] to a string like "[125, 125, 125]"

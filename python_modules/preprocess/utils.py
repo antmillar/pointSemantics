@@ -14,8 +14,6 @@ SCANNET_VOLUME = 75 #average volume in m3
 SCANNET_PTNUM = 150000 #average pts per scene
 SCANNET_DENSITY = 2000 #average pts per m3
 
-root_path = "/home/anthony/Downloads/"
-
 max_density = 500
 max_ptCount = 200_000
 max_ptCountOnly = 500_000

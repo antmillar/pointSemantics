@@ -18,6 +18,7 @@
         var meshFiles = [];    
 
     {% endif %}
+
 </script>
 
 <!-- load main script to run app -->
@@ -34,12 +35,24 @@
 
 </body>
 
-<input id = "btnLoad" type = "file" style = "visibility: hidden;">
 
+<!-- controls for POST requests -->
+
+<input id = "btnLoad" type = "file" style = "visibility: hidden;">
 
 <!-- this listens for load events -->
 <form action="" method="POST" id = "copyFiles">
     <input type="hidden" id = "fileNameLoad" name = "fileNameLoad">
+</form>
+
+<!-- this listens for remove events -->
+<form action="" method="POST" id = "removeFiles">
+    <input type="hidden" id = "fileNameRemove" name = "fileNameRemove">
+</form>
+
+<!-- this listens for remove events -->
+<form action="" method="POST" id = "downloadFile">
+    <input type="hidden" id = "fileNameDownload" name = "fileNameDownload">
 </form>
 
 <!-- this passes filenames to the model -->
