@@ -76,5 +76,5 @@ RUN cd pointnet2 && python setup.py install
 RUN cd ..
 
 
-# Set the default command to python3
-CMD ["python", "./app.py"]
+# Set the default command
+ENTRYPOINT python app.py

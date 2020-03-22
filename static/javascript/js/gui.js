@@ -7,6 +7,7 @@ export default class Controller
     this.view = view;
     this.model = model;
     this.btnLoad = document.querySelector("#btnLoad");
+    this.uploadInput = document.querySelector("#uploadInput");
     this.btnMesh = document.querySelector('#btnMesh');
     this.btnModel = document.querySelector("#btnModel");
     this.sceneData = document.querySelector("#metadata");
@@ -20,7 +21,7 @@ export default class Controller
     var UI = this.UI;
 
     const controls = {
-      loadFile: function() {that.btnLoad.click()},
+      loadFile: function() {that.uploadInput.click()},
       createMesh : function() {that.model.createMesh()},
       runModel: function() {that.model.runModel()},
       removeModel: function() {that.clearView(); that.model.removeModel()},
@@ -31,10 +32,10 @@ export default class Controller
     UI.displayLabel = {display : false};
     UI.displayMesh = {display : false};
 
-    // //on change of the hidden load button load a file 
-    this.btnLoad.addEventListener('change', () => that.model.copyFile());
+    //listens for change in load file form
+    this.uploadInput.addEventListener('change', () => that.model.uploadFile());
 
-    //set up the GUI
+    //GUI SETUP
 
     //DATA FOLDER
 

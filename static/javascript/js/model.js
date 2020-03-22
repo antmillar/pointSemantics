@@ -303,17 +303,12 @@ export default class Model
     }
     }
 
-  //tells python to locally copy the file to input directory
-  copyFile()
+  //pushs a file from javascript to python
+  uploadFile()
   {
-
-    let fileToLoad = document.querySelector('#btnLoad').files[0].name;
-    document.querySelector("#fileNameLoad").value = fileToLoad;
-    console.log(document.querySelector('#btnLoad').files[0].name);
-    document.querySelector('#copyFiles').submit()
-
+    console.log(document.querySelector('#uploadInput').files[0]);
+    document.querySelector('#uploadFile').submit()
   }
-
 
   //running the model on input PLY file
   runModel()

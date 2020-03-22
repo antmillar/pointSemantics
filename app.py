@@ -1,5 +1,6 @@
 #python library imports
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from werkzeug.utils import secure_filename
 import os
 import torch
 import json
@@ -38,21 +39,20 @@ def progress(thread_id):
     global statusText
     return str(statusText)
 
-@app.route('/modelViewer' , methods=["GET", "POST"])
-def modelViewer():
+#handles uploading files via https forms into python
+@app.route('/upload', methods = ['GET', 'POST'])
+def upload_file():
 
     global statusText
+    if request.method == 'POST':
 
-    inputFiles = os.listdir(input_path)    
-    outputFiles = os.listdir(output_path)    
-    meshFiles = os.listdir(mesh_path)  
+        f = request.files['file']
 
-    if request.method == "POST":
+        if(f.filename[-4:].lower() == ".ply"):
 
-        # loads files
-        if(request.form.get("fileNameLoad")):
+            fileToCopy = secure_filename(f.filename)
 
-            fileToCopy = request.form.get("fileNameLoad")
+            f.save(os.path.join(load_path, fileToCopy))
 
             print(load_path + "/" + fileToCopy)
 
@@ -64,8 +64,28 @@ def modelViewer():
 
             statusText = "view mode"
 
+        else:
+
+            print("invalid file format")
+
+    
+    return redirect(url_for('modelViewer'))
+
+
+@app.route('/modelViewer' , methods=["GET", "POST"])
+def modelViewer():
+
+    global statusText
+
+    inputFiles = os.listdir(input_path)    
+    outputFiles = os.listdir(output_path)    
+    meshFiles = os.listdir(mesh_path)  
+
+    if request.method == "POST":
+
+
         # removes files
-        elif(request.form.get("fileNameRemove")):
+        if(request.form.get("fileNameRemove")):
 
             fileToRemove = request.form.get("fileNameRemove")
 
@@ -146,4 +166,4 @@ def modelViewer():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run()#(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
