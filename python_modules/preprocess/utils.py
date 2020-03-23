@@ -124,7 +124,7 @@ def get_stats(root : str, fn : str):
 
 
 
-
+#this is a function run over all scans, the directory needs to be updated for local use
 #loop over all the scan directories and calculates the statistics for the SCANNET dataset
 def get_scannet_stats():
 

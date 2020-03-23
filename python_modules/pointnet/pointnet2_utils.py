@@ -1,3 +1,5 @@
+#module taken from https://github.com/daveredrum/Pointnet2.ScanNet/tree/master/pointnet2
+
 import torch
 from torch.autograd import Variable
 from torch.autograd import Function

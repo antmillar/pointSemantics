@@ -48,7 +48,7 @@ ENV CUDA_HOME "/usr/local/cuda-10.1"
 ENV PATH /usr/local/nvidia/bin:/usr/local/cuda-10.1/bin:${PATH}
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV NVIDIA_REQUIRE_CUDA "cuda>=10.1 brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
+ENV NVIDIA_REQUIRE_CUDA "cuda>=10.1 brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419"
 ENV FORCE_CUDA=1
 
 # CUDA 10.1-specific steps

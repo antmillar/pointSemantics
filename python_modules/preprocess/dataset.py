@@ -1,3 +1,6 @@
+#this module is largely from https://github.com/daveredrum/Pointnet2.ScanNet/blob/master/lib/dataset.py
+#however I have made adaptations and renamed variables for clarity
+
 import os
 import sys
 import time
@@ -7,8 +10,6 @@ import numpy as np
 sys.path.append(".")
 
 NUM_CLASSES = 20 
-
-#could make the subvol points dependant on memory available
 
 class ScannetDatasetWholeScene():
     def __init__(self, scene_data, density, max_subvol_points= 8192, is_weighting=True):

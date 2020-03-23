@@ -39,7 +39,7 @@ export default class Controller
 
     //DATA FOLDER
 
-        //DELETE FOLDER
+    //REMOVAL FOLDER
     UI.folderRemove = this.gui.addFolder('Data');
     UI.folderRemove.add(controls, 'loadFile').name("Load OBJ File");
     UI.folderRemove.add(controls, 'removeModel').name("Remove Model");

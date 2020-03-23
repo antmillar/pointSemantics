@@ -1,3 +1,7 @@
+#various functions taken from https://github.com/daveredrum/Pointnet2.ScanNet/blob/master/visualize.py
+#other functions added
+ 
+ 
 from plyfile import PlyData, PlyElement
 import numpy as np
 import os

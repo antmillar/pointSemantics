@@ -1,6 +1,7 @@
 import open3d as o3d
 import numpy as np
 
+#mapping according to scannet paper
 filterMap = {
 
 "floor"          :   [152., 223., 138.],
