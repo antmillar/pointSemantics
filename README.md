@@ -85,11 +85,11 @@ Install nvidia-container-runtime : https://github.com/NVIDIA/nvidia-container-ru
 
 Pull image to local disk from Docker Hub (approx 10GB)
 
-	```sudo docker pull antmillar/semanticpoint```
+	sudo docker pull antmillar/semanticpoint
 
 Run Image using GPUs (https://docs.docker.com/engine/reference/run/)
 
-	```sudo docker run --gpus all -p 5000:5000 antmillar/semanticpoint ```
+	sudo docker run --gpus all -p 5000:5000 antmillar/semanticpoint
 
 
 The app should then be available on localhost:5000 or http://127.0.0.1:5000/
@@ -114,17 +114,18 @@ Then from the root folder of the app in command line run:
 
 (probably worth creating a new conda Env or Venv first)
 
-```pip install -r requirements.txt
-pip install flask
-pip install plyfile
-pip install scipy
 
-cd pointnet2 
-python setup.py install
+	pip install -r requirements.txt
+	pip install flask
+	pip install plyfile
+	pip install scipy
 
-cd ..
+	cd pointnet2 
+	python setup.py install
 
-python app.py```
+	cd ..
+
+	python app.py
 
 The last line will launch the app at localhost:5000 or http://127.0.0.1:5000;
 
@@ -133,7 +134,7 @@ If you get an error saying No Cuda Kernel is Available, you may need to reinstal
 
 In the pointnet2 folder delete all the FOLDERS except src, then run:
 
-```TORCH_CUDA_ARCH_LIST="7.5" python app.py     ```
+	TORCH_CUDA_ARCH_LIST="7.5" python app.py
 
 where 7.5 is the Compute Capability of your Nvidia Gfx card
 
