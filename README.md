@@ -17,14 +17,14 @@ I have included some scenes in the app, if you'd like more there's some in the e
 
 ------------------------------------------------------------------------------------------------------------
 
-## Instructions for Installation
+# Instructions for Installation
 
 ------------------------------------------------------------------------------------------------------------
 
 
-# The easiest way to run the project is via a google compute engine instance
+The easiest way to run the project is via a google compute engine instance
 
-# INSTRUCTIONS FOR GOOGLE COMPUTE ENGINE
+## INSTRUCTIONS FOR GOOGLE COMPUTE ENGINE
 
 You'll need a google cloud account, this provides up to $300 free credit, of which this app should use a miniscule amount
 
@@ -71,9 +71,9 @@ Once you have finished with the application make sure to stop the instance and d
 
 ------------------------------------------------------------------------------------------------------------
 
-# If you have Linux installed you should be able to run the project locally if you have a cuda compatible GPU
+If you have Linux installed you should be able to run the project locally if you have a cuda compatible GPU
 
-# INSTRUCTIONS FOR LINUX:
+## INSTRUCTIONS FOR LINUX:
 
 
 Install Docker-CE for Linux: https://docs.docker.com/install/linux/docker-ce/ubuntu/
@@ -101,14 +101,14 @@ The app should then be available on localhost:5000 or http://127.0.0.1:5000/
 
 ----------------------------------------------------------------------------------------------------------------
 
-# I struggled to get CUDA working in Windows hence using Linux/VMs instead. However in theory it's possible to run the application in Windows if you can install the right dependencies. Which are:
+I struggled to get CUDA working in Windows hence using Linux/VMs instead. However in theory it's possible to run the application in Windows if you can install the right dependencies. Which are:
 
 CUDA version 10.1 (may need to manually configure ENV variables)
 Python 3.6+
 Anaconda/Miniconda
 PyTorch 1.4.0
 
-# INSTRUCTIONS FOR WINDOWS:
+## INSTRUCTIONS FOR WINDOWS:
 
 Then from the root folder of the app in command line run:
 
