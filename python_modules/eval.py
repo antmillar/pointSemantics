@@ -1,14 +1,13 @@
 #various functions taken from https://github.com/daveredrum/Pointnet2.ScanNet/blob/master/visualize.py
 #other functions added
  
- 
 from plyfile import PlyData, PlyElement
 import numpy as np
 import os
 import torch
 from torch.utils.data import DataLoader
-from .pointnet import pointnet2_semseg as pointnet2_semseg
-from .preprocess.dataset import ScannetDatasetWholeScene, collate_wholescene
+from python_modules.pointnet import pointnet2_semseg as pointnet2_semseg
+from python_modules.preprocess.dataset import ScannetDatasetWholeScene, collate_wholescene
 from pathlib import Path
 import numpy
 
