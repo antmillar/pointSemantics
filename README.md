@@ -49,12 +49,12 @@ run the docker image typing this line in sh: "sudo docker run --gpus all -p 5000
 you should see the following 
 
 
- * Serving Flask app "app" (lazy loading)
- * Environment: production
-   WARNING: This is a development server. Do not use it in a production deployment.
-   Use a production WSGI server instead.
- * Debug mode: off
- * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+	 * Serving Flask app "app" (lazy loading)
+	 * Environment: production
+	   WARNING: This is a development server. Do not use it in a production deployment.
+	   Use a production WSGI server instead.
+	 * Debug mode: off
+	 * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
 
 
 find the external IP for the app at https://console.cloud.google.com/compute/instances
