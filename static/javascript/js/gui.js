@@ -51,6 +51,7 @@ export default class Controller
     UI.toggleInputs.onChange((value) => this.displayModel(value, that.model.activeScene, "input"));
     UI.toggleLabels = UI.folderInputs.add(UI.displayLabel, 'display').name("Show Labels");
     UI.toggleMesh = UI.folderInputs.add(UI.displayMesh, 'display').name("Show Mesh");;
+
     // DISPLAY FOLDER
     UI.folderDisplay = this.gui.addFolder('Display Settings');
     //create color picker
@@ -68,7 +69,6 @@ export default class Controller
     UI.folderMesh.add(controls, 'createMesh').name("Create Mesh");
     UI.folderMesh.add(controls, 'downloadMesh').name("Download Mesh");
 
-
     //LABELS FOLDER
     UI.folderLabels;
     
@@ -83,6 +83,7 @@ export default class Controller
     this.listen();
   }
 
+  //MENU LISTENER
   listen()
   {
     var that = this;
@@ -125,7 +126,7 @@ export default class Controller
   }, false);
 }
 
-    //need to fix case where model is changed and unticked
+    //Add and Remove models from view
     displayModel(value, activeModel, type)
     {
       if(activeModel)
@@ -264,7 +265,7 @@ export default class Controller
     }
   }
 
-
+ //updates the label filters in the menu
   updateTogglesLabels()
   {
     try
@@ -274,15 +275,18 @@ export default class Controller
     catch
     {}
 
+    //if labelled point cloud present
     if(this.model.activeScene.labelledPLY) {
 
       this.UI.folderLabels = this.gui.addFolder('Filter by Labels');
       this.UI.folderLabels.open()
 
+      //by default all labels enabled
       for(const key of Object.keys(this.model.activeScene.labelledPLY.display)){
         this.model.activeScene.labelledPLY.display[key] = true;
       }
 
+      //add on change to each label tick box
       for(const key of Object.keys(this.model.activeScene.labelledPLY.display)){
         this.UI.folderLabels.add(this.model.activeScene.labelledPLY.display, key).onChange((bool) => this.togglePoints(bool, key));;
       }
@@ -331,6 +335,7 @@ export default class Controller
     }
   }
 
+  //updates the point size menu item
   updateTogglesPointSize()
   {
     let UI = this.UI;
@@ -347,6 +352,7 @@ export default class Controller
     }
   }
 
+  //updates the HUD info bottom left of screen to show model details
 updateSceneData()
 {
   console.log(this.model.activeScene)
@@ -371,7 +377,7 @@ updateSceneData()
 
   }
 
-
+//clear all models in view
 clearView()
 {
   //if active input model present, remove it
@@ -385,18 +391,6 @@ clearView()
 
 }
 //helper functions
-
-//convert from an array [125, 125, 125] to a string like "[125, 125, 125]"
-function stringifyArray(obj)
-{
-  let arr = Object.values(obj);
-
-  var str = "[";
-  str += arr.join(", ");
-  str += "]";
-  
-  return str;
-}
 
 //add remove folder to dat gui
 //https://stackoverflow.com/questions/14710559/dat-gui-how-to-hide-menu-with-code

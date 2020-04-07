@@ -1,3 +1,5 @@
+#from https://github.com/daveredrum/Pointnet2.ScanNet/tree/master/pointnet2
+
 import torch
 import torch.nn as nn
 from pointnet2_modules import PointnetFPModule, PointnetSAModule, PointnetSAModuleMSG

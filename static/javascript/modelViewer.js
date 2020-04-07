@@ -4,8 +4,10 @@ import Model from './js/model.js';
 import Controller from './js/gui.js';
 import Scene from './js/scene.js';
 
+//update navbar color on load
 document.querySelector(".navbar").className = "navbar navbar-expand-lg navbar-light fixed-top"
 
+//update the status
 statusUpdate()
 
 var mouse = new THREE.Vector2();
@@ -20,6 +22,7 @@ model.loadScenes(inputFiles, outputFiles, meshFiles);
 
 window.addEventListener( 'mousemove', onMouseMove, false );
 
+//render loop
 requestAnimationFrame(() => view.render());
 
 
@@ -34,7 +37,7 @@ function statusUpdate() {
     })
   }
 
-//get latest mouse
+//get latest mouse for raycasting
 function onMouseMove( event ) {
 
     //normalized device coords (-1 to 1)

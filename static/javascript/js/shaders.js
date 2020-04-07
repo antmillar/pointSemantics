@@ -1,6 +1,7 @@
 export default class Shaders
 {
     //returns a string to be passed as text to GLSL by threejs
+    //this shader passes attributes to the fragment shader
     static vertexShader()
     {
         return `
@@ -23,6 +24,7 @@ export default class Shaders
     }
 
     //returns a string to be passed as text to GLSL by threejs
+    //allow varying of the opacity of points
     static fragmentShader()
     {
         return `

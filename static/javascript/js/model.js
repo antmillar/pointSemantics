@@ -51,10 +51,12 @@ export default class Model
   loadScenes(inputFiles, labelFiles, meshFiles)
   {
     var that = this;
+
+    //load inputfiles into scenes
     inputFiles.forEach(function(item, index){
 
-    var scene = new Scene(item);
-    that.scenes[item] = scene;
+      var scene = new Scene(item);
+      that.scenes[item] = scene;
 
     })
 
@@ -180,32 +182,32 @@ export default class Model
       pcd.density = (pcd.ptCount / pcd.volume);
 
 
-          //if file has labels process these
-          if(type == "output"){
+      //if file has labels process these
+      if(type == "output"){
 
 
-            //extract color r g b into triplets as strings e.g [""]
-            var coords = colorsScaled.reduce(function(result, _, index, array) {
-    
-              if(index % 3 === 0)
-              {
-                result.push(array.slice(index, index + 3));
-              }
-              return result
-    
-            }, []);
-    
-            pcd.labelledPoints = coords.map(x=> this.labelMap[objToString(x)]);
-    
-            //extract the set of colors present
-            let set = new Set(coords.map(JSON.stringify));
-            let unique = Array.from(set).map(JSON.parse);
-    
-            pcd.labels = unique.map(x => this.labelMap[objToString(x)]);
-            pcd.display = {};
-            pcd.labels.forEach(label => {pcd.display[label] = true;});
-            pcd.toggles = [];
+        //extract color r g b into triplets as strings e.g [""]
+        var coords = colorsScaled.reduce(function(result, _, index, array) {
+
+          if(index % 3 === 0)
+          {
+            result.push(array.slice(index, index + 3));
           }
+          return result
+
+        }, []);
+
+        pcd.labelledPoints = coords.map(x=> this.labelMap[objToString(x)]);
+
+        //extract the set of colors present
+        let set = new Set(coords.map(JSON.stringify));
+        let unique = Array.from(set).map(JSON.parse);
+
+        pcd.labels = unique.map(x => this.labelMap[objToString(x)]);
+        pcd.display = {};
+        pcd.labels.forEach(label => {pcd.display[label] = true;});
+        pcd.toggles = [];
+      }
 
 
       //assign to scene objects
@@ -238,67 +240,65 @@ export default class Model
     
       objLoader.load(root + fn, (geometry) => {
     
-        //hacky check for whether geometry in children
 
-      let mesh;
+        let mesh;
 
-      if(!(mesh = geometry.children[0]))
-      {
+        //check if mesh nested
+        if(!(mesh = geometry.children[0]))
+        {
 
-        mesh = geometry;
-      }
-
-      mesh.name = fn;
-      mesh.rotation.x = -90 * Math.PI/180;
-
-      let center = new THREE.Vector3();
-      let bbox = new THREE.Box3().setFromObject(mesh);
-      let size = new THREE.Vector3;
-
-      bbox.getSize(size);
-      bbox.getCenter(center);
-
-      mesh.ptCount = mesh.geometry.attributes.position.count;
-      mesh.volume = (size.x * size.y * size.z);
-      mesh.density = (mesh.ptCount / mesh.volume);
-
-      mesh.translateY(center.z);
-      mesh.translateX(-center.x);
-      
-      var count = mesh.geometry.attributes.position.count;
-      
-      let scale = 1;
-      if(fn.slice(0,5) == "chair"){
-      scale = 0.005
-      // mesh.rotation.x = -Math.PI / 2;
-      }
-
-      mesh.scale.set(scale, scale, scale);
-
-      var positions = mesh.geometry.getAttribute("position");
-
-      console.log(positions.count);
-    
-      const mat = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, side: THREE.DoubleSide } ); //color: 0xf1f1f1, 
-
-      //needed if has subobjects
-      function initColor(parent, mtl) {
-      parent.traverse((o) => {
-          if (o.isMesh) {
-                  o.material = mtl;
-          }
-        });
+          mesh = geometry;
         }
 
-      //assign vertex colors material to model
-      initColor(mesh, mat);
-    
-      scene.mesh = mesh;
-      scene.mesh.name = "mesh";
+        mesh.name = fn;
+        mesh.rotation.x = -90 * Math.PI/180;
 
-      //dispatch event to say file loaded
-      console.log(`Loaded : ${fn}`);
-      btnLoad.dispatchEvent(this.eventLoaded);
+        //get mesh attributes
+        let center = new THREE.Vector3();
+        let bbox = new THREE.Box3().setFromObject(mesh);
+        let size = new THREE.Vector3;
+
+        bbox.getSize(size);
+        bbox.getCenter(center);
+
+        mesh.ptCount = mesh.geometry.attributes.position.count;
+        mesh.volume = (size.x * size.y * size.z);
+        mesh.density = (mesh.ptCount / mesh.volume);
+
+        //move mesh to origin
+        mesh.translateY(center.z);
+        mesh.translateX(-center.x);
+        
+        var count = mesh.geometry.attributes.position.count;
+        
+        let scale = 1;
+
+        mesh.scale.set(scale, scale, scale);
+
+        var positions = mesh.geometry.getAttribute("position");
+
+        console.log(positions.count);
+      
+        const mat = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, side: THREE.DoubleSide } ); //color: 0xf1f1f1, 
+
+        //needed if has mesh is nested in obj
+        function initColor(parent, mtl) {
+        parent.traverse((o) => {
+            if (o.isMesh) {
+                    o.material = mtl;
+            }
+          });
+          }
+
+        //assign vertex colors material to model
+        initColor(mesh, mat);
+      
+        scene.mesh = mesh;
+        scene.mesh.name = "mesh";
+
+        //dispatch event to say file loaded
+        console.log(`Loaded : ${fn}`);
+        btnLoad.dispatchEvent(this.eventLoaded);
       });
     }
     }
@@ -328,7 +328,7 @@ export default class Model
     }
   }
 
-
+//tells python to create mesh from labelled point cloud
   createMesh()
   {
 
@@ -353,6 +353,7 @@ export default class Model
     
   }
 
+  //download generated mesh if available
   downloadMesh()
   {
     var that = this;
@@ -376,6 +377,7 @@ export default class Model
     
   }
 
+  //delete a model from the app
   removeModel()
   {
     var that = this;
@@ -401,7 +403,6 @@ export default class Model
     
   }
 
-
   //generate list of labels to be filtered server side
   collateFilters()
   {
@@ -420,6 +421,9 @@ export default class Model
   }
 }
 
+//helper fn
+
+//convert array to it's equivalent in a string
 function objToString(obj)
 {
   let arr = Object.values(obj);

@@ -1,3 +1,5 @@
+# from https://github.com/daveredrum/Pointnet2.ScanNet/tree/master/pointnet2
+
 from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 

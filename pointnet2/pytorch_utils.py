@@ -1,3 +1,5 @@
+#from https://github.com/daveredrum/Pointnet2.ScanNet/tree/master/pointnet2
+
 import torch.nn as nn
 from typing import List, Tuple
 

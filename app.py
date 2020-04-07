@@ -22,6 +22,7 @@ app = Flask(__name__ , static_url_path = '/static' )
  #prevent file caching
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
+#relative paths
 cwd = os.getcwd()
 output_path = cwd + '/static/img/output'
 load_path = cwd + '/static/models/load'
@@ -29,6 +30,7 @@ input_path = cwd + '/static/models/inputs'
 output_path = cwd + '/static/models/outputs'
 mesh_path = cwd + '/static/models/meshes'
 
+#base route
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -48,6 +50,7 @@ def upload_file():
 
         f = request.files['file']
 
+        #upload file from local and save to folder, downsample if too dense for model
         if(f.filename[-4:].lower() == ".ply"):
 
             fileToCopy = secure_filename(f.filename)
@@ -84,7 +87,7 @@ def modelViewer():
     if request.method == "POST":
 
 
-        # removes files
+        # removes files from app folder
         if(request.form.get("fileNameRemove")):
 
             fileToRemove = request.form.get("fileNameRemove")

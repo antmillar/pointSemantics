@@ -10,7 +10,6 @@ export default class View
         this.mouse = mouse;
         this.populate();
     }
-    
 
     populate(){
 
@@ -63,8 +62,10 @@ export default class View
       return mismatch;
     }
 
-    raycastPoints(){
+    
       //raycasting to identify point category
+    raycastPoints(){
+
       this.raycaster.setFromCamera( this.mouse, this.camera );
       this.raycaster.params.Points.threshold = 0.1;
 
