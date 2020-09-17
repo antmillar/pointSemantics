@@ -1,3 +1,9 @@
+# GUI 
+
+[![GUI](https://img.youtube.com/vi/Cpq4EudhToU/0.jpg)](https://www.youtube.com/watch?v=Cpq4EudhToU)
+
+
+
 # READ ME
 
 This project uses some code from the following github repo
