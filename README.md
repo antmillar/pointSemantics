@@ -9,7 +9,7 @@ Front-End : HTML / JS / ThreeJS
 
 # Application Demo Video 
 
-[![GUI](https://img.youtube.com/vi/WPx13DuswXU /0.jpg)](https://www.youtube.com/watch?v=WPx13DuswXU )
+[![GUI](https://img.youtube.com/vi/WPx13DuswXU/0.jpg)](https://www.youtube.com/watch?v=WPx13DuswXU)
 
 
 
