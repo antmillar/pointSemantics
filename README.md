@@ -1,4 +1,12 @@
-# GUI 
+Points Semantics
+================
+
+Web Application for semantic segmentation of uploaded point clouds using [PointNet](https://arxiv.org/abs/1612.00593)
+
+Backend : Python / Flask
+Front-End : HTML/ JS / ThreeJS
+
+# Application Demo Video 
 
 [![GUI](https://img.youtube.com/vi/Cpq4EudhToU/0.jpg)](https://www.youtube.com/watch?v=Cpq4EudhToU)
 
