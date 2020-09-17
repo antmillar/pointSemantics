@@ -1,10 +1,11 @@
-Points Semantics
+Point Semantics
 ================
 
-Web Application for semantic segmentation of uploaded point clouds using [PointNet](https://arxiv.org/abs/1612.00593)
+Web Application for semantic segmentation of uploaded architectural 3D scene point clouds using [PointNet](https://arxiv.org/abs/1612.00593)
 
 Backend : Python / Flask
-Front-End : HTML/ JS / ThreeJS
+
+Front-End : HTML / JS / ThreeJS
 
 # Application Demo Video 
 
