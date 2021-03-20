@@ -37,7 +37,7 @@ inflect==4.1.0
 itsdangerous==1.1.0
 jaraco.itertools==5.0.0
 jedi==0.16.0
-Jinja2==2.11.1
+Jinja2==2.11.3
 jsonpatch==1.25
 jsonpointer==2.0
 jsonschema==3.2.0
