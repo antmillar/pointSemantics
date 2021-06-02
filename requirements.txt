@@ -104,7 +104,7 @@ tornado==6.0.3
 traitlets==4.3.3
 traittypes==0.2.1
 trimesh==3.6.1
-urllib3==1.24.2
+urllib3==1.26.5
 visdom==0.1.8.9
 wasabi==0.6.0
 wcwidth==0.1.8
